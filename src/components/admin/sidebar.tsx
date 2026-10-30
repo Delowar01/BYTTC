@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Award,
+  BarChart3,
   BookOpen,
   Building2,
   CalendarRange,
@@ -31,6 +33,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = {
+  Award,
+  BarChart3,
   BookOpen,
   Building2,
   CalendarRange,

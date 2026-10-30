@@ -1060,9 +1060,11 @@ grant execute on function public.check_rate_limit(text, text, int, interval) to 
 grant execute on function public.public_result_lookup(text, text)           to service_role;
 grant execute on function public.public_verify_certificate(text)            to service_role;
 
--- Trigger functions are invoked by the database itself; default privileges in
--- Supabase grant new functions to anon/authenticated, so revoke for the future.
-alter default privileges in schema public revoke execute on functions from public, anon, authenticated;
+-- Future functions: Supabase grants new functions to anon/authenticated per
+-- schema, and PostgreSQL grants EXECUTE to PUBLIC globally. Revoke both so
+-- every later function must be granted explicitly.
+alter default privileges in schema public revoke execute on functions from anon, authenticated;
+alter default privileges revoke execute on functions from public;
 
 -- =============================================================================
 -- Storage buckets

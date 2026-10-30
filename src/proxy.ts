@@ -7,5 +7,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Session refresh is only needed where auth matters.
-  matcher: ["/admin/:path*", "/login", "/api/admin/:path*"],
+  matcher: ["/admin/:path*", "/login", "/reset-password", "/auth/:path*"],
 };

@@ -9,6 +9,7 @@ import { EmptyRow } from "@/components/admin/empty-row";
 import { requireRole } from "@/lib/auth";
 import { ALL_STAFF, PUBLISHERS } from "@/lib/roles";
 import { formatDateTime } from "@/lib/utils";
+import { issueForResult } from "@/app/admin/certificates/actions";
 import { correctResult, deleteResult } from "../actions";
 
 export default async function ResultPage({ params }: PageProps<"/admin/results/[id]">) {
@@ -23,6 +24,8 @@ export default async function ResultPage({ params }: PageProps<"/admin/results/[
   const canPublish = PUBLISHERS.includes(profile.role);
   const live = r.status === "published" || r.status === "unpublished";
   const editable = !live || canPublish;
+  const { data: certs } = await supabase.from("certificates").select("id, certificate_no, status, issued_at").eq("result_id", id).order("issued_at", { ascending: false });
+  const validCert = certs?.find((c) => c.status === "valid");
   const { data: history } = canPublish
     ? await supabase.from("audit_logs").select("id, occurred_at, action, actor_id, old_data, new_data, reason").eq("table_name", "results").eq("record_id", id).order("occurred_at", { ascending: false }).limit(50)
     : { data: [] };
@@ -58,6 +61,31 @@ export default async function ResultPage({ params }: PageProps<"/admin/results/[
               <ActionButton action={deleteResult.bind(null, id)} label="Delete draft result" variant="destructive" confirm="Delete this draft result?" />
             </div>
           )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Certificate</CardTitle>
+          <CardDescription>
+            {validCert
+              ? "Correcting this result does not change the issued certificate. Reissue it from Certificates after a correction."
+              : r.status === "published" && r.is_pass
+                ? "This result is eligible for a certificate."
+                : "Certificates are issued for published, passing results."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {certs?.map((c) => (
+            <div key={c.id} className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="font-mono">{c.certificate_no}</span>
+              <StatusBadge status={c.status} />
+              <span className="text-muted-foreground">{formatDateTime(c.issued_at)}</span>
+              <a className="text-primary hover:underline" href={`/admin/certificates/${c.id}/pdf`} target="_blank" rel="noopener">
+                PDF
+              </a>
+            </div>
+          ))}
+          {canPublish && !validCert && r.status === "published" && r.is_pass && <ActionButton action={issueForResult.bind(null, id)} label="Issue certificate" variant="default" />}
         </CardContent>
       </Card>
       {canPublish && (

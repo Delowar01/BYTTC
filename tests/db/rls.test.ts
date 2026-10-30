@@ -142,3 +142,31 @@ describe.skipIf(!dbAvailable)("CMS URL safety (database constraint)", () => {
     expect(menuError?.message).toMatch(/menu_items_href_safe/);
   });
 });
+
+describe.skipIf(!dbAvailable)("Function privileges", () => {
+  it("anonymous visitors can execute only the public allow-list", async () => {
+    const db = anon();
+    // A sample of privileged/server-only functions must be refused outright.
+    for (const [fn, args] of [
+      ["public_verify_certificate", { p_certificate_no: "X" }],
+      ["public_result_lookup", { p_roll: "1", p_registration: "1" }],
+      ["check_rate_limit", { p_client_key: "k", p_kind: "x", p_max: 1, p_window: "1 minute" }],
+      ["identifiers_in_use", { p_rolls: [], p_registrations: [] }],
+      ["issue_certificates", { p_result_ids: [] }],
+      ["commit_result_batch", { p_batch_id: crypto.randomUUID() }],
+      ["submit_results", { p_exam_id: crypto.randomUUID() }],
+    ] as const) {
+      const { error } = await db.rpc(fn as never, args as never);
+      expect(error?.message, fn).toMatch(/permission denied/);
+    }
+    expect((await db.rpc("public_stats")).error).toBeNull();
+  });
+});
+
+describe.skipIf(!dbAvailable)("Auth configuration", () => {
+  it("staff can sign in with email and password, but public sign-up is disabled", async () => {
+    await expect(as(SUPER)).resolves.toBeTruthy();
+    const { error } = await anon().auth.signUp({ email: `intruder-${Date.now()}@example.org`, password: "Intruder12345" });
+    expect(error?.message).toMatch(/Signups not allowed/);
+  });
+});

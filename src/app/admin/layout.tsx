@@ -24,9 +24,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30 lg:flex-row">
-      <Sidebar items={items} brand={settings?.short_name || settings?.org_name_en || "Admin"} />
+      <div className="no-print contents">
+        <Sidebar items={items} brand={settings?.short_name || settings?.org_name_en || "Admin"} />
+      </div>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-background px-4 py-2 lg:px-8">
+        <header className="no-print flex flex-wrap items-center justify-between gap-2 border-b bg-background px-4 py-2 lg:px-8">
           <div className="text-sm">
             <span className="font-medium">{profile.full_name || profile.email}</span>
             <span className="text-muted-foreground"> · {ROLE_LABELS[profile.role]}</span>

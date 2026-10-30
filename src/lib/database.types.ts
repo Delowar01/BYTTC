@@ -67,14 +67,14 @@ export type Database = {
                   ]
                 },"certificates": {
                   Row: {
-                    "certificate_no": string,"created_at": string,"id": string,"institute_id": string,"issued_at": string,"issued_by": string | null,"result_id": string,"revoke_reason": string | null,"revoked_at": string | null,"revoked_by": string | null,"status": string,"student_id": string,"updated_at": string,"version": number
+                    "certificate_no": string,"created_at": string,"id": string,"institute_id": string,"issued_at": string,"issued_by": string | null,"result_id": string,"revoke_reason": string | null,"revoked_at": string | null,"revoked_by": string | null,"snapshot": NonNullable<Json>,"status": string,"student_id": string,"supersedes_id": string | null,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "certificate_no": string,"created_at"?: string,"id"?: string,"institute_id": string,"issued_at"?: string,"issued_by"?: string | null,"result_id": string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"status"?: string,"student_id": string,"updated_at"?: string,"version"?: number
+                    "certificate_no": string,"created_at"?: string,"id"?: string,"institute_id": string,"issued_at"?: string,"issued_by"?: string | null,"result_id": string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id": string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "certificate_no"?: string,"created_at"?: string,"id"?: string,"institute_id"?: string,"issued_at"?: string,"issued_by"?: string | null,"result_id"?: string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"status"?: string,"student_id"?: string,"updated_at"?: string,"version"?: number
+                    "certificate_no"?: string,"created_at"?: string,"id"?: string,"institute_id"?: string,"issued_at"?: string,"issued_by"?: string | null,"result_id"?: string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id"?: string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -86,7 +86,7 @@ isOneToOne: false
     },{
       foreignKeyName: "certificates_result_id_fkey"
       columns: ["result_id"]
-isOneToOne: true
+isOneToOne: false
       referencedRelation: "results"
       referencedColumns: ["id"]
     },{
@@ -94,6 +94,12 @@ isOneToOne: true
       columns: ["student_id"]
 isOneToOne: false
       referencedRelation: "students"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificates_supersedes_id_fkey"
+      columns: ["supersedes_id"]
+isOneToOne: false
+      referencedRelation: "certificates"
       referencedColumns: ["id"]
     }
                   ]
@@ -341,14 +347,14 @@ isOneToOne: false
                   ]
                 },"site_settings": {
                   Row: {
-                    "address_bn": string | null,"address_en": string | null,"disclaimer_bn": string | null,"disclaimer_en": string | null,"email": string | null,"facebook_url": string | null,"footer_text_bn": string | null,"footer_text_en": string | null,"id": number,"logo_url": string | null,"map_embed_url": string | null,"office_hours_bn": string | null,"office_hours_en": string | null,"og_image_url": string | null,"org_name_bn": string | null,"org_name_en": string,"phone": string | null,"seo_description_bn": string | null,"seo_description_en": string | null,"seo_title_bn": string | null,"seo_title_en": string | null,"short_name": string | null,"tagline_bn": string | null,"tagline_en": string | null,"updated_at": string,"youtube_url": string | null
+                    "address_bn": string | null,"address_en": string | null,"cert_signatory_left": string,"cert_signatory_right": string,"cert_title_en": string,"disclaimer_bn": string | null,"disclaimer_en": string | null,"email": string | null,"facebook_url": string | null,"footer_text_bn": string | null,"footer_text_en": string | null,"id": number,"logo_url": string | null,"map_embed_url": string | null,"office_hours_bn": string | null,"office_hours_en": string | null,"og_image_url": string | null,"org_name_bn": string | null,"org_name_en": string,"phone": string | null,"seo_description_bn": string | null,"seo_description_en": string | null,"seo_title_bn": string | null,"seo_title_en": string | null,"short_name": string | null,"tagline_bn": string | null,"tagline_en": string | null,"updated_at": string,"youtube_url": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "address_bn"?: string | null,"address_en"?: string | null,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en": string,"phone"?: string | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
+                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en": string,"phone"?: string | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
                   }
                   Update: {
-                    "address_bn"?: string | null,"address_en"?: string | null,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en"?: string,"phone"?: string | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
+                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en"?: string,"phone"?: string | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
                   }
                   Relationships: [
                     
@@ -412,6 +418,9 @@ isOneToOne: false
 "discard_batch":
 { Args: { "p_batch_id": string }; Returns: Json
                            },
+"generate_certificate_no":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "generate_registration_no":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -435,6 +444,37 @@ isOneToOne: false
 "is_safe_url":
 { Args: { "u": string }; Returns: boolean
                            },
+"issue_certificate_internal":
+{ Args: { "p_result_id": string,"p_supersedes"?: string }; Returns: {
+              "certificate_no": string,
+"created_at": string,
+"id": string,
+"institute_id": string,
+"issued_at": string,
+"issued_by": string | null,
+"result_id": string,
+"revoke_reason": string | null,
+"revoked_at": string | null,
+"revoked_by": string | null,
+"snapshot": NonNullable<Json>,
+"status": string,
+"student_id": string,
+"supersedes_id": string | null,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "certificates"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"issue_certificates":
+{ Args: { "p_result_ids": (string)[] }; Returns: Json
+                           },
+"issue_exam_certificates":
+{ Args: { "p_exam_id": string }; Returns: Json
+                           },
 "log_event":
 { Args: { "p_action": string,"p_data"?: Json,"p_reason"?: string,"p_record_id": string,"p_table": string }; Returns: undefined
                            },
@@ -455,8 +495,24 @@ isOneToOne: false
                            },
 "public_verify_certificate":
 { Args: { "p_certificate_no": string }; Returns: {
-              "certificate_no": string,"course_title": string,"grade": string,"grade_point": number,"institute_name": string,"issued_at": string,"result_status": string,"revoked_at": string,"roll_no": string,"session_name": string,"status": string,"student_name": string
+              "certificate_no": string,"course_title": string,"grade": string,"grade_point": number,"institute_name": string,"issued_at": string,"registration_no": string,"revoked_at": string,"roll_no": string,"session_name": string,"status": string,"student_name": string,"superseded_by": string
             }[]
+                           },
+"reissue_certificate":
+{ Args: { "p_id": string,"p_reason": string }; Returns: Json
+                           },
+"report_results":
+{ Args: { "p_exam_id"?: string }; Returns: {
+              "exam_code": string,"exam_id": string,"exam_name": string,"grade": string,"institute_code": string,"institute_name": string,"is_pass": boolean,"n": number,"status": string
+            }[]
+                           },
+"report_students":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "course_code": string,"institute_code": string,"institute_name": string,"n": number,"session_name": string,"status": string
+            }[]
+                           },
+"revoke_certificate":
+{ Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
 "rollback_result_batch":
 { Args: { "p_batch_id": string,"p_reason": string }; Returns: Json

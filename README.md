@@ -115,6 +115,50 @@ A suspended institute's users lose all data access immediately.
 6. **Rollback** — committed or unpublished batches can be rolled back (reason
    required). The original file, SHA-256 and full status history are kept.
 
+## Certificates
+
+- **Issue** — Admin → Certificates → choose an exam: every published, passing
+  result without a certificate gets one (or issue a single one from the
+  result page). Numbers look like `STTN-26-7KQ2M9XA`: random, unguessable and
+  unique. The credential data is **snapshotted** at issue time.
+- **PDF** — A4 landscape with the organization name, logo (PNG/JPEG), title,
+  signatory labels and disclaimer from Site settings, plus a QR code linking to
+  `/verify?no=<number>`. Text uses standard PDF fonts, so names are printed in
+  English.
+- **Verify** — `/verify` (public, rate limited) shows valid / revoked status and
+  the permitted credential fields only.
+- **Correct / revoke** — *Reissue* revokes the current certificate and issues a
+  new number linked to it (verification of the old number points to the new
+  one); *Revoke* requires a reason. Results with a valid certificate cannot be
+  unpublished until the certificate is revoked.
+
+## Reports, exports and printing
+
+Admin → Reports: results by exam (status counts, pass rate, grade
+distribution) and by institute, exportable to Excel. Results can be exported
+(Excel/CSV) and printed as a tabulation sheet per exam. Institute users get
+only their own figures (the report functions run under RLS).
+
+## Password reset
+
+`/forgot-password` sends a one-hour, single-use link (same response for
+unknown emails). The link is verified server-side at `/auth/confirm`, the user
+sets a new password at `/reset-password`, and all sessions are signed out.
+In production, paste `supabase/templates/recovery.html` into
+**Auth → Email Templates → Reset password** and configure SMTP.
+
+## Backups and recovery
+
+- Primary: Supabase managed daily backups (enable Point-in-Time Recovery on
+  production).
+- Portable logical backup: `scripts/backup.sh` (roles, schema, data incl. auth
+  users, every storage file, SHA-256 manifest). Store it encrypted, off-site.
+- Restore: `scripts/restore.sh <backup-dir>` into a **new, empty** project after
+  `supabase db push`. It verifies checksums, refuses to touch a database that
+  already has users or students, restores rows in one transaction and
+  re-uploads files. A local drill (wipe → restore) reproduced every count and
+  restored users could sign in.
+
 ## Security notes
 
 - Public sign-up is disabled; only a Super Admin creates accounts.
@@ -125,8 +169,11 @@ A suspended institute's users lose all data access immediately.
   (no parents' names, contact details, date of birth or ID numbers).
   Registration numbers are random to prevent enumeration.
 - National ID / birth registration numbers are never exported and are
-  redacted from the audit trail. Uploaded files live in a private bucket and
-  are served via 60-second signed URLs.
+  redacted from the audit trail. Import files, application documents and
+  student documents live in a private bucket (storage RLS limits institutes to
+  their own folder) and are served via 60-second signed URLs; views are logged.
+- Anonymous visitors can execute only three database functions
+  (`public_institutes`, `public_stats`, `is_safe_url`); a test pins this list.
 - CMS Markdown is rendered without raw HTML; CMS URLs are restricted to
   `https://` or site paths at both app and database level.
 
@@ -135,8 +182,9 @@ A suspended institute's users lose all data access immediately.
 1. Create a Supabase project; run `supabase link --project-ref <ref>` and
    `supabase db push` to apply `supabase/migrations` (do **not** run `seed.sql`
    in production).
-2. In Supabase Auth settings: disable sign-ups, set the Site URL to the
-   production domain, configure SMTP for password-reset emails.
+2. In Supabase Auth settings: disable sign-ups (keep the email provider
+   enabled), set the Site URL to the production domain, configure SMTP and
+   paste the reset-password template (see Password reset).
 3. Create a Vercel project from this repository and set
    `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY` (server-only) and `NEXT_PUBLIC_SITE_URL`.

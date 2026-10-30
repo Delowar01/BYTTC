@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageHero } from "@/components/public/page-hero";
+import { PrintButton } from "@/components/public/print-button";
 import { allowRequest } from "@/lib/client-key";
 import { getDictionary, getLocale, pick } from "@/lib/i18n";
 import { getPage, getSettings, pageMetadata } from "@/lib/public-data";
@@ -69,6 +70,7 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
                   [t.certificateNo, cert.certificate_no],
                   [t.studentName, cert.student_name],
                   [t.rollNo, cert.roll_no],
+                  [t.registrationNo, cert.registration_no],
                   [t.institute, cert.institute_name],
                   [t.course, cert.course_title],
                   [t.session, cert.session_name],
@@ -83,6 +85,15 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
                   </div>
                 ))}
               </dl>
+              {cert.superseded_by && (
+                <p className="text-sm" data-testid="cert-superseded">
+                  {t.certSuperseded}{" "}
+                  <a className="font-mono text-primary underline" href={`/verify?no=${cert.superseded_by}`}>
+                    {cert.superseded_by}
+                  </a>
+                </p>
+              )}
+              <PrintButton label={t.print} />
             </CardContent>
           </Card>
         )}

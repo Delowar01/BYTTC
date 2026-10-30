@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Upload } from "lucide-react";
+import { Download, Printer, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,18 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
   return (
     <div>
       <PageHeader title="Results" description="Review, correct and publish results. Imported results stay in draft until published.">
+        <Button variant="outline" asChild>
+          <a href={`/admin/results/export?format=xlsx${f.exam ? `&exam=${f.exam}` : ""}${f.status ? `&status=${f.status}` : ""}`}>
+            <Download /> Excel
+          </a>
+        </Button>
+        {f.exam && (
+          <Button variant="outline" asChild>
+            <Link href={`/admin/results/print?exam=${f.exam}`}>
+              <Printer /> Tabulation sheet
+            </Link>
+          </Button>
+        )}
         <Button asChild>
           <Link href="/admin/results/import">
             <Upload /> Bulk upload

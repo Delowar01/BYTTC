@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { withRole } from "@/lib/actions";
-import { dbMessage, fail, formValues, zodFail, type FormState } from "@/lib/forms";
+import { dbMessage, fail, formValues, success, zodFail, type FormState } from "@/lib/forms";
 import { ALL_STAFF, isCentral } from "@/lib/roles";
 import { optDate, optEmail, optText, reqText, uuid } from "@/lib/schemas";
 
@@ -69,5 +69,43 @@ export async function deleteStudent(id: string, _prev: FormState): Promise<FormS
     if (!data?.length) return fail("Not permitted or student not found.");
     revalidatePath("/admin/students");
     redirect("/admin/students?deleted=1");
+  });
+}
+
+const DOC_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
+async function studentFolder(supabase: Parameters<Parameters<typeof withRole>[1]>[0]["supabase"], id: string) {
+  const { data } = await supabase.from("students").select("institute_id").eq("id", id).maybeSingle();
+  return data ? `institutes/${data.institute_id}/students/${id}` : null;
+}
+
+/** Store a personal document privately; storage RLS limits institutes to their own folder. */
+export async function uploadStudentDocument(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return withRole(ALL_STAFF, async ({ supabase }) => {
+    const folder = await studentFolder(supabase, id);
+    if (!folder) return fail("Student not found.");
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return fail("Choose a file.");
+    if (!DOC_TYPES.includes(file.type)) return fail("Only PDF, JPEG or PNG files are accepted.");
+    if (file.size > 5 * 1024 * 1024) return fail("The file is larger than 5 MB.");
+    const name = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-").slice(-60);
+    const { error } = await supabase.storage.from("private-documents").upload(`${folder}/${Date.now()}-${name}`, file, { contentType: file.type });
+    if (error) return fail(error.message);
+    await supabase.rpc("log_event", { p_action: "document.upload", p_table: "students", p_record_id: id, p_data: { name } });
+    revalidatePath(`/admin/students/${id}`);
+    return success("Document uploaded.");
+  });
+}
+
+export async function deleteStudentDocument(id: string, name: string, _prev: FormState): Promise<FormState> {
+  return withRole(ALL_STAFF, async ({ supabase }) => {
+    const folder = await studentFolder(supabase, id);
+    if (!folder || name.includes("/")) return fail("Not found.");
+    const { data, error } = await supabase.storage.from("private-documents").remove([`${folder}/${name}`]);
+    if (error) return fail(error.message);
+    if (!data?.length) return fail("Only central administrators can delete documents.");
+    await supabase.rpc("log_event", { p_action: "document.delete", p_table: "students", p_record_id: id, p_data: { name } });
+    revalidatePath(`/admin/students/${id}`);
+    return success("Document deleted.");
   });
 }

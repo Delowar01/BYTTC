@@ -36,6 +36,9 @@ export default async function SettingsPage() {
     f("seo_description_en", "Default meta description (English)", { type: "textarea", rows: 2 }),
     f("seo_description_bn", "Default meta description (Bangla)", { type: "textarea", rows: 2 }),
     f("og_image_url", "Social share image", { type: "image", wide: true }),
+    f("cert_title_en", "Certificate title", { required: true, section: "Certificates", help: "Printed on PDF certificates with the organization name, logo and disclaimer above." }),
+    f("cert_signatory_left", "Left signature label", { required: true }),
+    f("cert_signatory_right", "Right signature label", { required: true }),
   ];
   return (
     <div className="max-w-4xl">

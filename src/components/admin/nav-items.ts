@@ -14,6 +14,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/results/entry", label: "Marks entry", icon: "PenLine", group: "Results", roles: ALL_STAFF },
   { href: "/admin/results/import", label: "Bulk result upload", icon: "Upload", group: "Results", roles: ALL_STAFF },
   { href: "/admin/imports", label: "Import history", icon: "History", group: "Results", roles: ALL_STAFF },
+  { href: "/admin/certificates", label: "Certificates", icon: "Award", group: "Results", roles: ALL_STAFF },
+  { href: "/admin/reports", label: "Reports", icon: "BarChart3", group: "Results", roles: ALL_STAFF },
   { href: "/admin/grading", label: "Grading rules", icon: "Sigma", group: "Results", roles: PUBLISHERS },
   { href: "/admin/cms/settings", label: "Site settings", icon: "Settings", group: "Website (CMS)", roles: CMS_EDITORS },
   { href: "/admin/cms/pages", label: "Pages & SEO", icon: "FileText", group: "Website (CMS)", roles: CMS_EDITORS },

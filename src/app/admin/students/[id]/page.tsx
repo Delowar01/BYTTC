@@ -10,7 +10,8 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { EmptyRow } from "@/components/admin/empty-row";
 import { requireRole } from "@/lib/auth";
 import { ALL_STAFF, isCentral } from "@/lib/roles";
-import { deleteStudent, saveStudent } from "../actions";
+import { FileUploadForm } from "@/components/admin/file-upload-form";
+import { deleteStudent, deleteStudentDocument, saveStudent, uploadStudentDocument } from "../actions";
 
 export default async function StudentFormPage({ params, searchParams }: PageProps<"/admin/students/[id]">) {
   const { supabase, profile } = await requireRole(ALL_STAFF);
@@ -36,6 +37,10 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
   // Institute users may only enrol in courses assigned to their institute.
   const allowed = assigned ? new Set(assigned.map((a) => a.course_id)) : null;
   const courses = (allCourses ?? []).filter((c) => !allowed || allowed.has(c.id) || c.id === row?.course_id);
+
+  const { data: docs } = row
+    ? await supabase.storage.from("private-documents").list(`institutes/${row.institute_id}/students/${row.id}`, { sortBy: { column: "created_at", order: "desc" } })
+    : { data: [] };
 
   const fields: FieldDef[] = [
     { name: "institute_id", label: "Institute", type: "select", required: true, defaultValue: row?.institute_id ?? (central ? "" : profile.institute_id), options: (institutes ?? []).filter((i) => i.status === "approved" || i.id === row?.institute_id).map((i) => ({ value: i.id, label: `${i.code} — ${i.name_en}` })), section: "Enrolment" },
@@ -69,6 +74,28 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
           <EntityForm action={saveStudent.bind(null, isNew ? null : id)} fields={fields} cancelHref="/admin/students" />
         </CardContent>
       </Card>
+      {row && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Private documents</CardTitle>
+            <CardDescription>ID copies, photos or previous certificates. Stored privately; links expire after 60 seconds and every view is logged.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-2 text-sm" data-testid="student-documents">
+              {!docs?.length && <li className="text-muted-foreground">No documents.</li>}
+              {docs?.map((d) => (
+                <li key={d.name} className="flex flex-wrap items-center gap-3">
+                  <a className="text-primary hover:underline" href={`/admin/students/${row.id}/document?name=${encodeURIComponent(d.name)}`} target="_blank" rel="noopener">
+                    {d.name.replace(/^\d+-/, "")}
+                  </a>
+                  {central && <ActionButton action={deleteStudentDocument.bind(null, row.id, d.name)} label="Delete" variant="ghost" confirm="Delete this document?" />}
+                </li>
+              ))}
+            </ul>
+            <FileUploadForm action={uploadStudentDocument.bind(null, row.id)} accept="application/pdf,image/jpeg,image/png" />
+          </CardContent>
+        </Card>
+      )}
       {row && (
         <Card>
           <CardHeader>
