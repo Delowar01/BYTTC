@@ -9,6 +9,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // HarfBuzz (WASM) shapes Bangla text in certificate PDFs; load it from node_modules.
+  serverExternalPackages: ["harfbuzzjs"],
+  outputFileTracingIncludes: {
+    "/admin/certificates/**": ["./src/assets/fonts/**", "./node_modules/harfbuzzjs/dist/*.wasm"],
+  },
   turbopack: {
     rules: {
       "*.css": {

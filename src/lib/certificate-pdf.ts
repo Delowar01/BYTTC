@@ -1,9 +1,11 @@
 import "server-only";
 import { degrees, PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
+import { drawShapedCentered, hasBangla } from "@/lib/bangla-text";
 
 export type CertificateSnapshot = {
   student_name: string;
+  student_name_bn?: string | null;
   roll_no: string;
   registration_no: string;
   institute_name: string;
@@ -20,7 +22,7 @@ export type CertificateInput = {
   status: "valid" | "revoked";
   issuedAt: string;
   snapshot: CertificateSnapshot;
-  org: { name: string; title: string; logoUrl: string | null; disclaimer: string | null; signLeft: string; signRight: string };
+  org: { name: string; nameBn: string | null; title: string; logoUrl: string | null; disclaimer: string | null; signLeft: string; signRight: string };
   verifyUrl: string;
 };
 
@@ -95,16 +97,26 @@ export async function renderCertificatePdf(input: CertificateInput): Promise<Uin
     page.drawImage(img, { x: (width - scaled.width) / 2, y: top - 8, width: scaled.width, height: scaled.height });
     top -= 30;
   }
-  centered(page, input.org.name, top - 8, sansBold, 18, TEAL);
-  centered(page, input.org.title, top - 52, serifBold, 34, INK);
-  page.drawLine({ start: { x: width / 2 - 90, y: top - 70 }, end: { x: width / 2 + 90, y: top - 70 }, thickness: 1, color: GOLD });
+  if (hasBangla(input.org.name)) await drawShapedCentered(page, input.org.name, top - 8, 18, TEAL, "bold");
+  else centered(page, input.org.name, top - 8, sansBold, 18, TEAL);
+  // Optional Bangla organization name; without it the English layout is unchanged.
+  const orgBn = input.org.nameBn && input.org.nameBn !== input.org.name ? input.org.nameBn : null;
+  if (orgBn) await drawShapedCentered(page, orgBn, top - 28, 13, TEAL);
+  const titleY = top - 52 - (orgBn ? 12 : 0);
+  centered(page, input.org.title, titleY, serifBold, 34, INK);
+  page.drawLine({ start: { x: width / 2 - 90, y: titleY - 18 }, end: { x: width / 2 + 90, y: titleY - 18 }, thickness: 1, color: GOLD });
 
   // Body
   const s = input.snapshot;
-  let y = top - 96;
+  let y = titleY - 44;
   centered(page, "This is to certify that", y, serifItalic, 15, MUTED);
   y -= 38;
-  centered(page, s.student_name, y, serifBold, 30, INK);
+  if (hasBangla(s.student_name)) await drawShapedCentered(page, s.student_name, y, 26, INK, "bold");
+  else centered(page, s.student_name, y, serifBold, 30, INK);
+  if (s.student_name_bn && s.student_name_bn !== s.student_name) {
+    y -= 26;
+    await drawShapedCentered(page, s.student_name_bn, y, 17, INK, "bold");
+  }
   y -= 22;
   centered(page, `Roll No. ${s.roll_no}   ·   Registration No. ${s.registration_no}`, y, sans, 11, MUTED);
   y -= 30;
