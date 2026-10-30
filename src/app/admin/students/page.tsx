@@ -117,7 +117,9 @@ export default async function StudentsPage({ searchParams }: PageProps<"/admin/s
                   <TableCell className="font-mono">{s.roll_no}</TableCell>
                   <TableCell className="font-mono">{s.registration_no}</TableCell>
                   <TableCell>
-                    <div className="font-medium">{s.name_en}</div>
+                    <Link href={`/admin/students/${s.id}`} className="font-medium text-primary hover:underline">
+                      {s.name_en}
+                    </Link>
                     {s.name_bn && <div className="text-xs text-muted-foreground">{s.name_bn}</div>}
                   </TableCell>
                   <TableCell>{s.institutes?.code}</TableCell>

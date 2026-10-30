@@ -150,7 +150,11 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
                         <input type="checkbox" name="ids" value={r.id} aria-label={`Select ${r.students.roll_no}`} className="size-4" />
                       </TableCell>
                     )}
-                    <TableCell className="font-mono">{r.students.roll_no}</TableCell>
+                    <TableCell className="font-mono">
+                      <Link href={`/admin/results/${r.id}`} className="text-primary hover:underline">
+                        {r.students.roll_no}
+                      </Link>
+                    </TableCell>
                     <TableCell>{r.students.name_en}</TableCell>
                     <TableCell className="font-mono text-xs">{r.exams?.code}</TableCell>
                     <TableCell>{r.institutes?.code}</TableCell>

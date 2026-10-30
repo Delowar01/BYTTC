@@ -64,7 +64,7 @@ export default async function BatchPage({ params, searchParams }: PageProps<"/ad
           <AlertDescription className="text-inherit">{msg}</AlertDescription>
         </Alert>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card className="gap-1 py-4">
           <CardHeader className="px-4">
             <CardDescription>Status</CardDescription>
@@ -111,7 +111,11 @@ export default async function BatchPage({ params, searchParams }: PageProps<"/ad
           {b.failure_reason && (
             <Alert variant="destructive">
               <AlertTitle>Failure</AlertTitle>
-              <AlertDescription>{b.failure_reason}</AlertDescription>
+              <AlertDescription>
+                {b.failure_reason.includes("results_student_id_exam_id_key")
+                  ? "A result for one of these students and exams was saved after this file was validated. Upload the file again to re-check it."
+                  : b.failure_reason}
+              </AlertDescription>
             </Alert>
           )}
           <div className="flex flex-wrap gap-3">

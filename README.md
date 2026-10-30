@@ -123,8 +123,9 @@ A suspended institute's users lose all data access immediately.
   unique. The credential data is **snapshotted** at issue time.
 - **PDF** — A4 landscape with the organization name, logo (PNG/JPEG), title,
   signatory labels and disclaimer from Site settings, plus a QR code linking to
-  `/verify?no=<number>`. Text uses standard PDF fonts, so names are printed in
-  English.
+  `/verify?no=<number>`. Bangla organization and student names are shaped with
+  HarfBuzz (WASM) and drawn with Noto Sans Bengali (SIL OFL, see
+  `src/assets/fonts/OFL.txt`).
 - **Verify** — `/verify` (public, rate limited) shows valid / revoked status and
   the permitted credential fields only.
 - **Correct / revoke** — *Reissue* revokes the current certificate and issues a
@@ -174,21 +175,14 @@ In production, paste `supabase/templates/recovery.html` into
   their own folder) and are served via 60-second signed URLs; views are logged.
 - Anonymous visitors can execute only three database functions
   (`public_institutes`, `public_stats`, `is_safe_url`); a test pins this list.
+- A nonce-based Content Security Policy is sent with every page
+  (`src/lib/csp.ts`); file downloads are excluded.
 - CMS Markdown is rendered without raw HTML; CMS URLs are restricted to
   `https://` or site paths at both app and database level.
 
-## Deploying (Vercel + Supabase)
+## Deploying
 
-1. Create a Supabase project; run `supabase link --project-ref <ref>` and
-   `supabase db push` to apply `supabase/migrations` (do **not** run `seed.sql`
-   in production).
-2. In Supabase Auth settings: disable sign-ups (keep the email provider
-   enabled), set the Site URL to the production domain, configure SMTP and
-   paste the reset-password template (see Password reset).
-3. Create a Vercel project from this repository and set
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `SUPABASE_SERVICE_ROLE_KEY` (server-only) and `NEXT_PUBLIC_SITE_URL`.
-4. Bootstrap the first Super Admin from a trusted machine:
-   `SEED_SUPER_ADMIN_EMAIL=… SEED_SUPER_ADMIN_PASSWORD=… npm run seed:users`
-   (with the production URL and service key in the environment).
-5. Sign in, then set the organization identity in **Site settings**.
+- Staging (Vercel Preview + separate Supabase project), the first Super Admin
+  procedure and production notes: [DEPLOYMENT.md](DEPLOYMENT.md).
+- Browser acceptance checklist: [ACCEPTANCE.md](ACCEPTANCE.md), using the
+  synthetic sample files in [samples/](samples/README.md).
