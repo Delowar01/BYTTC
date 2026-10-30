@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Brand: deep teal primary, warm amber accent. Edit tokens here to rebrand. */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0.02 200);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.02 200);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.02 200);
+  --primary: oklch(0.47 0.09 190);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.96 0.015 190);
+  --secondary-foreground: oklch(0.3 0.05 195);
+  --muted: oklch(0.967 0.004 200);
+  --muted-foreground: oklch(0.5 0.02 200);
+  --accent: oklch(0.95 0.03 85);
+  --accent-foreground: oklch(0.35 0.07 70);
+  --brand-accent: oklch(0.78 0.15 75);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.91 0.01 200);
+  --input: oklch(0.88 0.01 200);
+  --ring: oklch(0.6 0.09 190);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Markdown bodies rendered from the CMS */
+.prose-cms h2 { @apply mt-6 mb-2 text-xl font-semibold; }
+.prose-cms h3 { @apply mt-4 mb-2 text-lg font-semibold; }
+.prose-cms p { @apply my-3 leading-7; }
+.prose-cms ul { @apply my-3 list-disc pl-6; }
+.prose-cms ol { @apply my-3 list-decimal pl-6; }
+.prose-cms li { @apply my-1; }
+.prose-cms a { @apply text-primary underline underline-offset-4; }
+.prose-cms strong { @apply font-semibold; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}
