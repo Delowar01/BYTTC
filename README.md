@@ -50,6 +50,7 @@ All seed data (institutes, students, results) is synthetic.
 ```bash
 npm test           # unit tests + database security tests (needs local Supabase)
 npm run test:e2e   # Playwright end-to-end tests (needs `npm run build` or a running app)
+npm run test:upgrade  # upgrade path from the last deployed migration (resets the LOCAL database)
 npm run lint && npm run typecheck
 ```
 
@@ -58,6 +59,10 @@ npm run lint && npm run typecheck
 - `tests/db` — runs real queries as each role: RLS and tenant isolation,
   publication guard, no auto-publish, correction reasons, audit trail,
   atomic batch commit, full batch lifecycle.
+- `tests/upgrade` — upgrades a local database that already has published
+  results and valid/superseded certificates the way `supabase db push` does
+  (CLI-style login role), then checks that existing records are unchanged and
+  still verify.
 - `tests/e2e` — browser flows: login, CRUD, institute approval, CMS edits,
   bulk result upload (errors → commit → publish → correction → public search →
   unpublish → rollback), student import, single results and corrections,

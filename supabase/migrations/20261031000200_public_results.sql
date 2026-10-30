@@ -16,7 +16,13 @@ language sql volatile set search_path = '' as $$
 $$;
 
 alter table public.results add column verify_code text;
+-- Schema maintenance on existing rows: user triggers off (see 20261031000100).
+alter table public.results disable trigger user;
 update public.results set verify_code = public.random_code(12) where verify_code is null;
+alter table public.results enable trigger user;
+insert into public.audit_logs (action, table_name, record_id, new_data, reason)
+select 'migration.backfill', 'results', '20261031000200', jsonb_build_object('rows', count(*)), 'Schema upgrade: verification codes for result sheets'
+from public.results;
 alter table public.results
   alter column verify_code set default public.random_code(12),
   alter column verify_code set not null,

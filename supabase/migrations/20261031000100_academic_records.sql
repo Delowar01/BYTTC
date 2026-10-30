@@ -10,9 +10,11 @@ alter table public.students
   add column thana text check (thana is null or length(thana) <= 80),
   add column district text check (district is null or length(district) <= 80),
   add column passing_year int check (passing_year between 1950 and 2100),
-  add column enrollment_date date default current_date,
+  -- Existing students keep an unknown (blank) date; new students default to today (below).
+  add column enrollment_date date,
   -- Historical exception to the course's standard duration (audited like every student change)
   add column course_duration_override text check (course_duration_override is null or length(course_duration_override) <= 40);
+alter table public.students alter column enrollment_date set default current_date;
 create unique index students_passport_unique on public.students (passport_no) where passport_no is not null;
 
 create or replace function public.students_normalize() returns trigger
@@ -141,6 +143,13 @@ alter table public.results
   add column display_published_on date;
 alter table public.results alter column grade_point type numeric(4, 2);
 
+-- Backfill derived columns of existing results. This is schema maintenance,
+-- not an academic change: user triggers are switched off for these statements
+-- (only the table owner can do this), so the role guards — which do not
+-- recognize the migration login, e.g. the CLI's temporary login role — cannot
+-- block published results, and updated_at/version stay untouched. One audit
+-- entry records the backfill.
+alter table public.results disable trigger user;
 update public.results r
    set full_marks = e.theory_full_marks + e.practical_full_marks + e.viva_full_marks,
        grade_scale_id = (select id from public.grade_scales where code = 'GPA5' and version = 1),
@@ -148,6 +157,11 @@ update public.results r
        display_published_on = (r.published_at at time zone 'Asia/Dhaka')::date
   from public.exams e
  where e.id = r.exam_id;
+alter table public.results enable trigger user;
+insert into public.audit_logs (action, table_name, record_id, new_data, reason)
+select 'migration.backfill', 'results', '20261031000100', jsonb_build_object('rows', count(*)),
+       'Schema upgrade: full marks, grading scale v1, first publication time, displayed publication date'
+from public.results;
 
 alter table public.certificates add column needs_reissue boolean not null default false;
 

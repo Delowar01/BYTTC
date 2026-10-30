@@ -95,7 +95,10 @@ their marks, grades and publication time (`first_published_at` is copied
 from `published_at`).
 
 1. **Approval first** — this changes the hosted staging database; run it only
-   after you approve the upgrade.
+   after you approve the upgrade. Update your checkout first
+   (`git pull origin claude/academic-documents-upgrade`): an earlier version
+   of these migrations failed on databases that already had published results
+   (see *Retry after the failed attempt* below).
 2. **Backup** — run `scripts/backup.sh` from your own terminal (it needs the
    database connection string, project URL and service-role key typed into
    the shell; see README → Backups and recovery). It saves the database and
@@ -121,6 +124,34 @@ from `published_at`).
 7. **Recovery** — if anything is wrong, use the dashboard's backup/PITR
    restore, or `scripts/restore.sh` into a new, empty project and point the
    app at it; do not hand-edit migrations that were applied.
+
+### Retry after the failed attempt
+
+The first attempt stopped in `20261031000100_academic_records.sql` with
+“Institute users can only save draft or submitted results”. Its backfill
+updated existing published results, and the existing result guard does not
+recognize the CLI's migration login, so it rejected the update; Postgres rolled
+the whole migration back. The fixed migrations run their backfills with the
+table's user triggers switched off (owner-only, inside the same transaction)
+and record one audit entry per backfill instead. `npm run test:upgrade`
+reproduces the staging situation locally and now passes.
+
+Before retrying, confirm the rollback left nothing behind (read-only, SQL
+Editor):
+
+```sql
+select
+  (select count(*) from supabase_migrations.schema_migrations where version >= '20261031000000') as new_migrations_recorded,  -- expect 0
+  to_regclass('public.grade_scales') as grade_scales_table,                                                                -- expect null
+  to_regclass('public.document_templates') as templates_table,                                                             -- expect null
+  (select tableowner from pg_tables where schemaname = 'public' and tablename = 'results') as results_owner,                -- expect postgres
+  (select count(*) from public.results where status = 'published') as published_results,                                  -- note it (20)
+  (select count(*) from public.certificates where status = 'valid') as valid_certificates;                                -- note it
+```
+
+If any value differs from the expectation, stop and share the output. Then
+continue with steps 2–5 above; in step 5 the published-results and
+valid-certificates counts must equal the numbers you noted.
 
 After the upgrade: Admin → Document templates shows active built-in
 templates for marksheets, admit cards and registration cards; certificates

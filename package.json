@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:upgrade": "bash scripts/test-upgrade.sh",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "seed:users": "tsx scripts/seed-users.ts"
