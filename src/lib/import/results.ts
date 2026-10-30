@@ -23,6 +23,7 @@ export const RESULT_COLUMNS = [
   "exam_code",
   "theory_marks",
   "practical_marks",
+  "viva_marks",
   "remarks",
 ] as const;
 
@@ -32,7 +33,7 @@ export type ResultLookup = {
   students: Map<string, { id: string; registration_no: string; name_en: string; institute_id: string; course_id: string }>;
   institutes: Map<string, { id: string; status: string }>;
   courses: Map<string, { id: string }>;
-  exams: Map<string, { id: string; course_id: string; theory_full_marks: number; practical_full_marks: number; is_active: boolean }>;
+  exams: Map<string, { id: string; course_id: string; theory_full_marks: number; practical_full_marks: number; viva_full_marks: number; is_active: boolean }>;
   /** `${student_id}:${exam_id}` → current result status */
   existing: Map<string, string>;
 };
@@ -43,6 +44,7 @@ export type ResultPayloadRow = {
   exam_id: string;
   theory_marks: number | null;
   practical_marks: number | null;
+  viva_marks: number | null;
   remarks: string | null;
   roll_no: string;
   exam_code: string;
@@ -118,6 +120,7 @@ export function validateResultRows(rows: Record<string, string>[], lookup: Resul
 
     let theory: number | null = null;
     let practical: number | null = null;
+    let viva: number | null = null;
     if (exam) {
       const t = parseMarks(r.theory_marks, Number(exam.theory_full_marks));
       if (t.error) err("theory_marks", t.error, r.theory_marks);
@@ -125,6 +128,10 @@ export function validateResultRows(rows: Record<string, string>[], lookup: Resul
       const p = parseMarks(r.practical_marks, Number(exam.practical_full_marks));
       if (p.error) err("practical_marks", p.error, r.practical_marks);
       practical = p.value;
+      // Viva is only required when the exam includes a Viva component.
+      const v = parseMarks(r.viva_marks, Number(exam.viva_full_marks ?? 0));
+      if (v.error) err("viva_marks", Number(exam.viva_full_marks ?? 0) === 0 ? "This exam has no Viva; leave blank" : v.error, r.viva_marks);
+      viva = v.value;
     }
 
     if (student && exam) {
@@ -147,6 +154,7 @@ export function validateResultRows(rows: Record<string, string>[], lookup: Resul
         exam_id: exam.id,
         theory_marks: theory,
         practical_marks: practical,
+        viva_marks: viva,
         remarks: remarks || null,
         roll_no: roll,
         exam_code: examCode,

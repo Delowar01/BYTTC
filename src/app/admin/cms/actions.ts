@@ -19,6 +19,7 @@ const settingsSchema = z.object({
   org_name_en: reqText("Organization name (English)", 200),
   org_name_bn: optText,
   short_name: optText,
+  org_registration_no: optText,
   tagline_en: optText,
   tagline_bn: optText,
   email: optEmail,

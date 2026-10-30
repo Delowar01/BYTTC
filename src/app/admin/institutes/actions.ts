@@ -21,6 +21,7 @@ const schema = z.object({
   address: optText,
   district: optText,
   established_year: optInt(1900, 2100),
+  registration_no: optText,
   remarks: optText,
 });
 

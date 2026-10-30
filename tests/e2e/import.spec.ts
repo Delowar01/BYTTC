@@ -12,7 +12,7 @@ const STUDENTS = [
   ["200047", "2600000047", "RAJ-001"],
   ["200054", "2600000054", "DHK-001"],
 ];
-const HEADERS = ["roll_no", "registration_no", "student_name", "institute_code", "course_code", "exam_code", "theory_marks", "practical_marks", "remarks"];
+const HEADERS = ["roll_no", "registration_no", "student_name", "institute_code", "course_code", "exam_code", "theory_marks", "practical_marks", "viva_marks", "remarks"];
 
 async function writeXlsx(rows: (string | number)[][]) {
   const wb = new ExcelJS.Workbook();

@@ -17,6 +17,10 @@ export const STUDENT_COLUMNS = [
   "phone",
   "email",
   "address",
+  "thana",
+  "district",
+  "passport_no",
+  "passing_year",
 ] as const;
 
 export type StudentLookup = {
@@ -48,6 +52,10 @@ export type StudentPayloadRow = {
   phone: string | null;
   email: string | null;
   address: string | null;
+  thana: string | null;
+  district: string | null;
+  passport_no: string | null;
+  passing_year: number | null;
 };
 
 const ID_RE = /^[A-Z0-9-]{3,20}$/;
@@ -64,6 +72,7 @@ export function validateStudentRows(rows: Record<string, string>[], lookup: Stud
   const valid: StudentPayloadRow[] = [];
   const seenRoll = new Map<string, number>();
   const seenReg = new Map<string, number>();
+  const seenPassport = new Map<string, number>();
   const opt = (v: string | undefined) => (v && v.trim() !== "" ? v.trim() : null);
 
   rows.forEach((r, i) => {
@@ -117,6 +126,12 @@ export function validateStudentRows(rows: Record<string, string>[], lookup: Stud
     if (gender && !["male", "female", "other"].includes(gender)) err("gender", "Use male, female or other", r.gender);
     const email = (r.email ?? "").trim().toLowerCase();
     if (email && !EMAIL_RE.test(email)) err("email", "Invalid email address", email);
+    const passport = (r.passport_no ?? "").replace(/\s/g, "").toUpperCase();
+    if (passport && !/^[A-Z0-9]{5,20}$/.test(passport)) err("passport_no", "Passport number: 5–20 letters or digits");
+    else if (passport && seenPassport.has(passport)) err("passport_no", `Duplicate passport number (also on row ${seenPassport.get(passport)})`);
+    else if (passport) seenPassport.set(passport, rowNo);
+    const year = (r.passing_year ?? "").trim();
+    if (year && !/^(19[5-9]\d|20\d\d|2100)$/.test(year)) err("passing_year", "Use a 4-digit year", year);
 
     issues.push(...rowIssues);
     if (!rowIssues.length && institute && course && session) {
@@ -136,6 +151,10 @@ export function validateStudentRows(rows: Record<string, string>[], lookup: Stud
         phone: opt(r.phone),
         email: email || null,
         address: opt(r.address),
+        thana: opt(r.thana),
+        district: opt(r.district),
+        passport_no: passport || null,
+        passing_year: year ? Number(year) : null,
       });
     }
   });

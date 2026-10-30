@@ -17,9 +17,10 @@ const lookup = (): ResultLookup => ({
     ["GD", { id: "c2" }],
   ]),
   exams: new Map([
-    ["COA-1", { id: "e1", course_id: "c1", theory_full_marks: 60, practical_full_marks: 40, is_active: true }],
-    ["GD-1", { id: "e2", course_id: "c2", theory_full_marks: 100, practical_full_marks: 0, is_active: true }],
-    ["OLD", { id: "e3", course_id: "c1", theory_full_marks: 60, practical_full_marks: 40, is_active: false }],
+    ["COA-1", { id: "e1", course_id: "c1", theory_full_marks: 60, practical_full_marks: 40, viva_full_marks: 0, is_active: true }],
+    ["GD-1", { id: "e2", course_id: "c2", theory_full_marks: 100, practical_full_marks: 0, viva_full_marks: 0, is_active: true }],
+    ["OLD", { id: "e3", course_id: "c1", theory_full_marks: 60, practical_full_marks: 40, viva_full_marks: 0, is_active: false }],
+    ["VIV-1", { id: "e4", course_id: "c1", theory_full_marks: 100, practical_full_marks: 50, viva_full_marks: 50, is_active: true }],
   ]),
   existing: new Map([["s2:e1", "published"]]),
 });
@@ -59,7 +60,7 @@ describe("validateResultRows", () => {
   it("accepts a valid row and maps it to ids", () => {
     const res = validateResultRows([row()], lookup());
     expect(res.errorRows).toBe(0);
-    expect(res.valid).toEqual([{ row: 2, student_id: "s1", exam_id: "e1", theory_marks: 50, practical_marks: 30, remarks: null, roll_no: "100001", exam_code: "COA-1", student_name: "Asha Khan" }]);
+    expect(res.valid).toEqual([{ row: 2, student_id: "s1", exam_id: "e1", theory_marks: 50, practical_marks: 30, viva_marks: null, remarks: null, roll_no: "100001", exam_code: "COA-1", student_name: "Asha Khan" }]);
   });
 
   it("normalizes case and whitespace of identifiers", () => {
@@ -104,6 +105,16 @@ describe("validateResultRows", () => {
     expect(messages([row({ roll_no: "100002", registration_no: "2600000002" })])).toContain(
       "2:roll_no:A published result already exists for this student and exam; use correction instead",
     );
+  });
+
+  it("requires Viva marks only when the exam has a Viva component", () => {
+    const viva = (o: Partial<Record<string, string>>) => row({ exam_code: "VIV-1", theory_marks: "80", practical_marks: "40", ...o });
+    expect(messages([viva({})])).toContain("2:viva_marks:Marks are required");
+    expect(messages([viva({ viva_marks: "51" })])).toContain("2:viva_marks:Exceeds full marks (50)");
+    const ok = validateResultRows([viva({ viva_marks: "45.5" })], lookup());
+    expect(ok.errorRows).toBe(0);
+    expect(ok.valid[0]).toMatchObject({ theory_marks: 80, practical_marks: 40, viva_marks: 45.5 });
+    expect(messages([row({ viva_marks: "5" })])).toContain("2:viva_marks:This exam has no Viva; leave blank");
   });
 
   it("treats a student-name mismatch as a warning, not an error", () => {

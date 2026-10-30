@@ -11,7 +11,8 @@ import { EmptyRow } from "@/components/admin/empty-row";
 import { requireRole } from "@/lib/auth";
 import { ALL_STAFF, isCentral } from "@/lib/roles";
 import { FileUploadForm } from "@/components/admin/file-upload-form";
-import { deleteStudent, deleteStudentDocument, saveStudent, uploadStudentDocument } from "../actions";
+import { courseDuration, photoUrl } from "@/lib/photos";
+import { deleteStudent, deleteStudentDocument, removeStudentPhoto, saveStudent, uploadStudentDocument, uploadStudentPhoto } from "../actions";
 
 export default async function StudentFormPage({ params, searchParams }: PageProps<"/admin/students/[id]">) {
   const { supabase, profile } = await requireRole(ALL_STAFF);
@@ -27,7 +28,7 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
   }
   const [{ data: institutes }, { data: allCourses }, { data: sessions }, results, { data: assigned }] = await Promise.all([
     supabase.from("institutes").select("id, code, name_en, status").order("code"),
-    supabase.from("courses").select("id, code, title_en").order("code"),
+    supabase.from("courses").select("id, code, title_en, duration_months").order("code"),
     supabase.from("academic_sessions").select("id, name").order("start_date", { ascending: false }),
     isNew
       ? Promise.resolve({ data: [] })
@@ -41,6 +42,10 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
   const { data: docs } = row
     ? await supabase.storage.from("private-documents").list(`institutes/${row.institute_id}/students/${row.id}`, { sortBy: { column: "created_at", order: "desc" } })
     : { data: [] };
+
+  const standardCourse = (allCourses ?? []).find((c) => c.id === row?.course_id);
+  const courseOf = standardCourse ? courseDuration(standardCourse.duration_months) : "";
+  const photo = row ? await photoUrl(supabase, row.photo_path) : null;
 
   const fields: FieldDef[] = [
     { name: "institute_id", label: "Institute", type: "select", required: true, defaultValue: row?.institute_id ?? (central ? "" : profile.institute_id), options: (institutes ?? []).filter((i) => i.status === "approved" || i.id === row?.institute_id).map((i) => ({ value: i.id, label: `${i.code} — ${i.name_en}` })), section: "Enrolment" },
@@ -58,7 +63,13 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
     { name: "phone", label: "Phone", defaultValue: row?.phone },
     { name: "email", label: "Email", type: "email", defaultValue: row?.email },
     { name: "address", label: "Address", type: "textarea", rows: 2, defaultValue: row?.address },
-    { name: "national_id", label: "NID / birth registration no. (private)", defaultValue: row?.national_id, help: "Confidential. Never shown publicly or exported." },
+    { name: "thana", label: "Thana / upazila", defaultValue: row?.thana },
+    { name: "district", label: "District", defaultValue: row?.district },
+    { name: "national_id", label: "NID / birth registration no. (private)", defaultValue: row?.national_id, help: "Confidential. Never shown publicly or exported.", section: "Private identifiers" },
+    { name: "passport_no", label: "Passport number (optional, private)", defaultValue: row?.passport_no, help: "Lets the student search results with passport + roll or registration. Never displayed or exported." },
+    { name: "enrollment_date", label: "Registration / enrolment date", type: "date", defaultValue: row?.enrollment_date, section: "Academic record" },
+    { name: "passing_year", label: "Passing year", type: "number", defaultValue: row?.passing_year },
+    { name: "course_duration_override", label: "Duration override (exceptional, audited)", defaultValue: row?.course_duration_override, help: `Leave blank to use the course's standard duration${courseOf ? ` (${courseOf})` : ""}.` },
   ];
 
   return (
@@ -77,13 +88,32 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
       {row && (
         <Card>
           <CardHeader>
+            <CardTitle>Student photo</CardTitle>
+            <CardDescription>JPG, PNG or WebP, at least 150×150 pixels, up to 5 MB. Stored privately and reused on results, certificates, admit and registration cards.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-start gap-6">
+            {photo ? (
+              <img src={photo} alt={`Photo of ${row.name_en}`} className="h-40 w-32 rounded border object-cover" data-testid="student-photo" />
+            ) : (
+              <div className="flex h-40 w-32 items-center justify-center rounded border bg-muted text-xs text-muted-foreground">No photo</div>
+            )}
+            <div className="space-y-3">
+              <FileUploadForm action={uploadStudentPhoto.bind(null, row.id)} accept="image/jpeg,image/png,image/webp" label={photo ? "Replace photo" : "Upload photo"} inputLabel="Photo file" />
+              {photo && <ActionButton action={removeStudentPhoto.bind(null, row.id)} label="Remove photo" variant="ghost" confirm="Remove this photo? Documents already issued keep their copy." />}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {row && (
+        <Card>
+          <CardHeader>
             <CardTitle>Private documents</CardTitle>
             <CardDescription>ID copies, photos or previous certificates. Stored privately; links expire after 60 seconds and every view is logged.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ul className="space-y-2 text-sm" data-testid="student-documents">
-              {!docs?.length && <li className="text-muted-foreground">No documents.</li>}
-              {docs?.map((d) => (
+              {!docs?.some((d) => d.id) && <li className="text-muted-foreground">No documents.</li>}
+              {docs?.filter((d) => d.id).map((d) => (
                 <li key={d.name} className="flex flex-wrap items-center gap-3">
                   <a className="text-primary hover:underline" href={`/admin/students/${row.id}/document?name=${encodeURIComponent(d.name)}`} target="_blank" rel="noopener">
                     {d.name.replace(/^\d+-/, "")}

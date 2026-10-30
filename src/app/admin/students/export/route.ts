@@ -4,7 +4,7 @@ import { toCsv, toXlsx } from "@/lib/import/spreadsheet";
 import { ALL_STAFF } from "@/lib/roles";
 import { readStudentFilters, studentQuery } from "@/lib/students";
 
-const HEADERS = ["roll_no", "registration_no", "name_en", "name_bn", "father_name", "mother_name", "date_of_birth", "gender", "phone", "email", "address", "institute_code", "course_code", "session", "status"];
+const HEADERS = ["roll_no", "registration_no", "name_en", "name_bn", "father_name", "mother_name", "date_of_birth", "gender", "phone", "email", "address", "thana", "district", "passing_year", "institute_code", "course_code", "session", "status"];
 
 /** Export the filtered student list (RLS-scoped). National ID is never exported. */
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await studentQuery(session.supabase, filters).range(from, from + 999);
     if (error) return Response.json({ error: error.message }, { status: 500 });
     for (const s of data) {
-      rows.push([s.roll_no, s.registration_no, s.name_en, s.name_bn, s.father_name, s.mother_name, s.date_of_birth, s.gender, s.phone, s.email, s.address, s.institutes?.code, s.courses?.code, s.academic_sessions?.name, s.status]);
+      rows.push([s.roll_no, s.registration_no, s.name_en, s.name_bn, s.father_name, s.mother_name, s.date_of_birth, s.gender, s.phone, s.email, s.address, s.thana, s.district, s.passing_year, s.institutes?.code, s.courses?.code, s.academic_sessions?.name, s.status]);
     }
     if (data.length < 1000) break;
   }

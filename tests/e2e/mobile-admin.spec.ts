@@ -11,6 +11,6 @@ test("admin console is usable on a phone", async ({ page }) => {
   // Navigation is behind the menu button on small screens
   await page.goto("/admin");
   await page.getByRole("button", { name: "Toggle navigation" }).click();
-  await page.getByRole("link", { name: "Students" }).first().click();
+  await page.getByRole("link", { name: "Student list" }).click();
   await expect(page).toHaveURL(/\/admin\/students$/);
 });

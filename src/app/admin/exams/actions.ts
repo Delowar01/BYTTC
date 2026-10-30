@@ -17,14 +17,16 @@ const schema = z
     exam_date: optDate,
     theory_full_marks: reqNumber("Theory full marks", 0, 1000),
     practical_full_marks: reqNumber("Practical full marks", 0, 1000),
-    pass_marks: reqNumber("Pass marks", 0, 2000),
+    viva_full_marks: reqNumber("Viva full marks", 0, 1000),
+    pass_marks: reqNumber("Pass marks", 0, 3000),
+    grade_scale_code: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{2,20}$/, "Choose a grading scale"),
     is_active: checkbox,
   })
-  .refine((v) => v.theory_full_marks + v.practical_full_marks > 0, {
+  .refine((v) => v.theory_full_marks + v.practical_full_marks + v.viva_full_marks > 0, {
     message: "Full marks must be greater than zero",
     path: ["theory_full_marks"],
   })
-  .refine((v) => v.pass_marks <= v.theory_full_marks + v.practical_full_marks, {
+  .refine((v) => v.pass_marks <= v.theory_full_marks + v.practical_full_marks + v.viva_full_marks, {
     message: "Pass marks cannot exceed total full marks",
     path: ["pass_marks"],
   });

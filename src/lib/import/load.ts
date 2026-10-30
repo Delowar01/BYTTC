@@ -15,7 +15,7 @@ async function referenceData(supabase: Client) {
   const [institutes, courses, exams, sessions] = await Promise.all([
     supabase.from("institutes").select("id, code, status"),
     supabase.from("courses").select("id, code"),
-    supabase.from("exams").select("id, code, course_id, theory_full_marks, practical_full_marks, is_active"),
+    supabase.from("exams").select("id, code, course_id, theory_full_marks, practical_full_marks, viva_full_marks, is_active"),
     supabase.from("academic_sessions").select("id, name"),
   ]);
   for (const r of [institutes, courses, exams, sessions]) if (r.error) throw new Error(r.error.message);
@@ -30,6 +30,7 @@ async function referenceData(supabase: Client) {
           course_id: e.course_id,
           theory_full_marks: Number(e.theory_full_marks),
           practical_full_marks: Number(e.practical_full_marks),
+          viva_full_marks: Number(e.viva_full_marks),
           is_active: e.is_active,
         },
       ]),

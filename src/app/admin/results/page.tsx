@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Printer, Upload } from "lucide-react";
+import { Download, Plus, Printer, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,19 +24,20 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
   const { supabase, profile } = await requireRole(ALL_STAFF);
   const sp = await searchParams;
   const s = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
-  const f = { exam: s("exam"), institute: s("institute"), status: (STATUSES as readonly string[]).includes(s("status")) ? s("status") : "", batch: s("batch"), q: s("q") };
+  const f = { exam: s("exam"), institute: s("institute"), status: (STATUSES as readonly string[]).includes(s("status")) ? s("status") : "", batch: s("batch"), q: s("q"), corrected: s("corrected") === "1" ? "1" : "" };
   const { from, to, page } = pageRange(Number(sp.page));
   const canPublish = PUBLISHERS.includes(profile.role);
 
   let query = supabase
     .from("results")
-    .select("id, theory_marks, practical_marks, total_marks, percentage, grade, grade_point, is_pass, status, version, updated_at, students!inner(roll_no, registration_no, name_en), exams(code), institutes(code)", { count: "exact" })
+    .select("id, theory_marks, practical_marks, viva_marks, total_marks, full_marks, percentage, grade, grade_point, grade_override, is_pass, status, version, updated_at, students!inner(roll_no, registration_no, name_en), exams(code), institutes(code)", { count: "exact" })
     .order("updated_at", { ascending: false })
     .range(from, to);
   if (f.exam) query = query.eq("exam_id", f.exam);
   if (f.institute) query = query.eq("institute_id", f.institute);
   if (f.status) query = query.eq("status", f.status as ResultStatus);
   if (f.batch) query = query.eq("batch_id", f.batch);
+  if (f.corrected) query = query.gt("version", 1);
   if (f.q) {
     const t = escapeLike(f.q);
     query = query.or(`roll_no.ilike.%${t}%,registration_no.ilike.%${t}%,name_en.ilike.%${t}%`, { referencedTable: "students" });
@@ -64,9 +65,14 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
             </Link>
           </Button>
         )}
-        <Button asChild>
+        <Button variant="outline" asChild>
           <Link href="/admin/results/import">
             <Upload /> Bulk upload
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link href="/admin/results/new">
+            <Plus /> Add single result
           </Link>
         </Button>
       </PageHeader>
@@ -108,6 +114,9 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
             </NativeSelect>
             <div className="flex gap-2">
               {f.batch && <input type="hidden" name="batch" value={f.batch} />}
+              <label className="flex items-center gap-1 text-sm whitespace-nowrap">
+                <input type="checkbox" name="corrected" value="1" defaultChecked={!!f.corrected} className="size-4" /> Corrected only
+              </label>
               <Button variant="outline" type="submit">Filter</Button>
               {f.batch && (
                 <Button variant="ghost" asChild>
@@ -135,6 +144,7 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
                   <TableHead>Institute</TableHead>
                   <TableHead>Theory</TableHead>
                   <TableHead>Practical</TableHead>
+                  <TableHead>Viva</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Grade</TableHead>
                   <TableHead>Status</TableHead>
@@ -142,7 +152,7 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!results?.length && <EmptyRow colSpan={canPublish ? 11 : 10} />}
+                {!results?.length && <EmptyRow colSpan={canPublish ? 12 : 11} />}
                 {results?.map((r) => (
                   <TableRow key={r.id}>
                     {canPublish && (
@@ -160,9 +170,13 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
                     <TableCell>{r.institutes?.code}</TableCell>
                     <TableCell>{r.theory_marks ?? "—"}</TableCell>
                     <TableCell>{r.practical_marks ?? "—"}</TableCell>
-                    <TableCell>{r.total_marks}</TableCell>
+                    <TableCell>{r.viva_marks ?? "—"}</TableCell>
+                    <TableCell>
+                      {r.total_marks}
+                      <span className="text-xs text-muted-foreground">/{r.full_marks}</span>
+                    </TableCell>
                     <TableCell className={r.is_pass ? "" : "text-destructive"}>
-                      {r.grade} ({Number(r.grade_point).toFixed(2)})
+                      {r.grade} ({Number(r.grade_point).toFixed(2)}){r.grade_override && <span title="Grade override"> *</span>}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={r.status} />

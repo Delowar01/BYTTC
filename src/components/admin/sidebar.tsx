@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Award,
+  FilePen,
+  BadgeCheck,
+  Plus,
+  UserPlus,
   BarChart3,
   BookOpen,
   Building2,
@@ -34,6 +38,10 @@ import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = {
   Award,
+  FilePen,
+  BadgeCheck,
+  Plus,
+  UserPlus,
   BarChart3,
   BookOpen,
   Building2,
@@ -62,12 +70,16 @@ type Item = { href: string; label: string; icon: string; group: string };
 
 export function Sidebar({ items, brand }: { items: Item[]; brand: string }) {
   const pathname = usePathname();
+  const search = useSearchParams();
+  const current = pathname + (search.size ? `?${search.toString()}` : "");
   const [open, setOpen] = useState(false);
   const groups = [...new Set(items.map((i) => i.group))];
   // The most specific matching item is the active one.
-  const active = items
-    .filter((i) => pathname === i.href || (i.href !== "/admin" && pathname.startsWith(i.href + "/")))
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const active =
+    items.find((i) => i.href.includes("?") && current === i.href)?.href ??
+    items
+      .filter((i) => !i.href.includes("?") && (pathname === i.href || (i.href !== "/admin" && pathname.startsWith(i.href + "/"))))
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   const nav = (
     <nav className="space-y-5 p-4 text-sm">

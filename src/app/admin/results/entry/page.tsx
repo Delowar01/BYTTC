@@ -20,7 +20,7 @@ export default async function MarksEntryPage({ searchParams }: PageProps<"/admin
 
   // Tenants only see exams for courses assigned to their institute.
   const [{ data: exams }, { data: assigned }] = await Promise.all([
-    supabase.from("exams").select("id, code, name, course_id, session_id, theory_full_marks, practical_full_marks, pass_marks").eq("is_active", true).order("code"),
+    supabase.from("exams").select("id, code, name, course_id, session_id, theory_full_marks, practical_full_marks, viva_full_marks, pass_marks").eq("is_active", true).order("code"),
     central ? Promise.resolve({ data: null }) : supabase.from("institute_courses").select("course_id"),
   ]);
   const allowedCourses = assigned ? new Set(assigned.map((a) => a.course_id)) : null;
@@ -36,12 +36,12 @@ export default async function MarksEntryPage({ searchParams }: PageProps<"/admin
     const { data: students } = await q;
     truncated = (students?.length ?? 0) > MAX_ROWS;
     const list = (students ?? []).slice(0, MAX_ROWS);
-    const { data: results } = await supabase.from("results").select("id, student_id, status, theory_marks, practical_marks, remarks, grade").eq("exam_id", exam.id).in("student_id", list.map((s) => s.id));
+    const { data: results } = await supabase.from("results").select("id, student_id, status, theory_marks, practical_marks, viva_marks, remarks, grade").eq("exam_id", exam.id).in("student_id", list.map((s) => s.id));
     const byStudent = new Map((results ?? []).map((r) => [r.student_id, r]));
     draftCount = (results ?? []).filter((r) => r.status === "draft").length;
     rows = list.map((s) => {
       const r = byStudent.get(s.id);
-      return { studentId: s.id, roll: s.roll_no, name: s.name_en, institute: s.institutes?.code ?? "", resultId: r?.id ?? null, status: r?.status ?? null, theory: r?.theory_marks ?? null, practical: r?.practical_marks ?? null, remarks: r?.remarks ?? null, grade: r?.grade ?? null };
+      return { studentId: s.id, roll: s.roll_no, name: s.name_en, institute: s.institutes?.code ?? "", resultId: r?.id ?? null, status: r?.status ?? null, theory: r?.theory_marks ?? null, practical: r?.practical_marks ?? null, viva: r?.viva_marks ?? null, remarks: r?.remarks ?? null, grade: r?.grade ?? null };
     });
   }
 
@@ -71,7 +71,7 @@ export default async function MarksEntryPage({ searchParams }: PageProps<"/admin
           <CardHeader>
             <CardTitle>{exam.name}</CardTitle>
             <CardDescription>
-              Full marks: theory {Number(exam.theory_full_marks)}, practical {Number(exam.practical_full_marks)} · pass mark {Number(exam.pass_marks)} · {rows.length} student(s)
+              Full marks: written {Number(exam.theory_full_marks)}, practical {Number(exam.practical_full_marks)}{Number(exam.viva_full_marks) > 0 ? `, viva ${Number(exam.viva_full_marks)}` : ""} · pass mark {Number(exam.pass_marks)} · {rows.length} student(s)
               {truncated && ` (showing the first ${MAX_ROWS}; use bulk upload for larger cohorts)`}
             </CardDescription>
           </CardHeader>
@@ -79,7 +79,7 @@ export default async function MarksEntryPage({ searchParams }: PageProps<"/admin
             {rows.length === 0 ? (
               <p className="text-sm text-muted-foreground">No active students are enrolled in this exam&apos;s course{allSessions ? "" : " and session"}.</p>
             ) : (
-              <MarksGrid action={saveMarks.bind(null, exam.id)} rows={rows} theoryFull={Number(exam.theory_full_marks)} practicalFull={Number(exam.practical_full_marks)} />
+              <MarksGrid action={saveMarks.bind(null, exam.id)} rows={rows} theoryFull={Number(exam.theory_full_marks)} practicalFull={Number(exam.practical_full_marks)} vivaFull={Number(exam.viva_full_marks)} />
             )}
             {!central && draftCount > 0 && (
               <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:bg-amber-950">

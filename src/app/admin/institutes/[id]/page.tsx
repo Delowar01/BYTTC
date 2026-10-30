@@ -40,6 +40,7 @@ export default async function InstituteFormPage({ params, searchParams }: PagePr
   const fields: FieldDef[] = [
     { name: "code", label: "Institute code", required: true, defaultValue: row?.code, help: "Unique, e.g. DHK-002. Used in import files." },
     { name: "established_year", label: "Established (year)", type: "number", defaultValue: row?.established_year },
+    { name: "registration_no", label: "Institute registration number", defaultValue: row?.registration_no, help: "Official registration of the institute (separate from the internal code); printed on results and documents." },
     { name: "name_en", label: "Name (English)", required: true, defaultValue: row?.name_en },
     { name: "name_bn", label: "Name (Bangla)", defaultValue: row?.name_bn },
     { name: "head_name", label: "Head of institute", defaultValue: row?.head_name },

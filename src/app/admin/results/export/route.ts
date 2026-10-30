@@ -5,7 +5,7 @@ import { toCsv, toXlsx } from "@/lib/import/spreadsheet";
 import { ALL_STAFF } from "@/lib/roles";
 import type { Database } from "@/lib/database.types";
 
-const HEADERS = ["roll_no", "registration_no", "student_name", "institute_code", "exam_code", "theory_marks", "practical_marks", "total_marks", "percentage", "grade", "grade_point", "result", "status", "version", "published_at"];
+const HEADERS = ["roll_no", "registration_no", "student_name", "institute_code", "exam_code", "theory_marks", "practical_marks", "viva_marks", "total_marks", "full_marks", "percentage", "grade", "grade_point", "result", "status", "version", "published_at", "display_published_on"];
 type ResultStatus = Database["public"]["Enums"]["result_status"];
 
 /** Export results (RLS-scoped: institutes get only their own). */
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   for (let from = 0; ; from += 1000) {
     let q = session.supabase
       .from("results")
-      .select("theory_marks, practical_marks, total_marks, percentage, grade, grade_point, is_pass, status, version, published_at, students!inner(roll_no, registration_no, name_en), exams(code), institutes(code)")
+      .select("theory_marks, practical_marks, viva_marks, total_marks, full_marks, display_published_on, percentage, grade, grade_point, is_pass, status, version, published_at, students!inner(roll_no, registration_no, name_en), exams(code), institutes(code)")
       .order("exam_id")
       .order("student_id")
       .range(from, from + 999);
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await q;
     if (error) return Response.json({ error: error.message }, { status: 500 });
     for (const r of data) {
-      rows.push([r.students.roll_no, r.students.registration_no, r.students.name_en, r.institutes?.code, r.exams?.code, r.theory_marks, r.practical_marks, r.total_marks, r.percentage, r.grade, r.grade_point, r.is_pass ? "PASS" : "FAIL", r.status, r.version, r.published_at]);
+      rows.push([r.students.roll_no, r.students.registration_no, r.students.name_en, r.institutes?.code, r.exams?.code, r.theory_marks, r.practical_marks, r.viva_marks, r.total_marks, r.full_marks, r.percentage, r.grade, r.grade_point, r.is_pass ? "PASS" : "FAIL", r.status, r.version, r.published_at, r.display_published_on]);
     }
     if (data.length < 1000) break;
   }

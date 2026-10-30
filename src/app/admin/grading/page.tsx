@@ -1,57 +1,59 @@
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/admin/page-header";
-import { EntityForm } from "@/components/admin/entity-form";
-import { ActionButton } from "@/components/admin/action-button";
 import { requireRole } from "@/lib/auth";
 import { PUBLISHERS } from "@/lib/roles";
-import { deleteGradeRule, saveGradeRule } from "./actions";
+import { formatDateTime } from "@/lib/utils";
+import { saveScale } from "./actions";
+import { ScaleEditor } from "./scale-editor";
 
-export const metadata = { title: "Grading rules" };
+export const metadata = { title: "Grading scales" };
+type Rule = { min_percent: number; grade: string; point: number };
 
 export default async function GradingPage() {
   const { supabase } = await requireRole(PUBLISHERS);
-  const { data: rules } = await supabase.from("grade_rules").select("*").order("min_percent", { ascending: false });
+  const { data: scales } = await supabase.from("grade_scales").select("*").order("code").order("version", { ascending: false });
+  const current = (scales ?? []).filter((s) => s.is_current);
   return (
     <div className="max-w-4xl space-y-6">
-      <PageHeader title="Grading rules" description="Letter grade by percentage of total full marks. A student below the exam's pass marks always gets F (0.00)." />
+      <PageHeader
+        title="Grading scales"
+        description="Percentage-to-grade rules per scale (e.g. GPA 5.00 or CGPA 4.00). Each exam chooses a scale. Saving creates a new version: results already graded keep the version they used."
+      />
+      {current.map((s) => (
+        <Card key={s.id}>
+          <CardHeader>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              {s.name} <Badge variant="secondary">{s.code}</Badge> <Badge variant="outline">version {s.version}</Badge>
+            </CardTitle>
+            <CardDescription>Updated {formatDateTime(s.created_at)}. Below the exam&apos;s pass mark a student always gets the lowest grade.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScaleEditor action={saveScale} lockCode initial={{ code: s.code, name: s.name, max_point: Number(s.max_point), rules: (s.rules as Rule[]).map((r) => ({ ...r, point: Number(r.point) })) }} />
+            {(scales ?? []).some((o) => o.code === s.code && !o.is_current) && (
+              <details className="mt-4 text-sm">
+                <summary className="cursor-pointer text-muted-foreground">Previous versions</summary>
+                <ul className="mt-2 space-y-1">
+                  {(scales ?? [])
+                    .filter((o) => o.code === s.code && !o.is_current)
+                    .map((o) => (
+                      <li key={o.id}>
+                        v{o.version} · {formatDateTime(o.created_at)} · {(o.rules as Rule[]).map((r) => `${r.min_percent}%→${r.grade} (${r.point})`).join(", ")}
+                      </li>
+                    ))}
+                </ul>
+              </details>
+            )}
+          </CardContent>
+        </Card>
+      ))}
       <Card>
         <CardHeader>
-          <CardTitle>Current scale</CardTitle>
-          <CardDescription>Grades are computed by the database whenever a result is saved. Changing the scale affects results saved afterwards; existing results keep their grade until corrected.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {rules?.map((r) => (
-            <div key={r.id} className="flex flex-col gap-2 border-b pb-4 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <EntityForm
-                  action={saveGradeRule.bind(null, r.id)}
-                  submitLabel="Update"
-                  fields={[
-                    { name: "min_percent", label: "From %", type: "number", step: "0.01", required: true, defaultValue: r.min_percent },
-                    { name: "grade", label: "Grade", required: true, defaultValue: r.grade },
-                    { name: "grade_point", label: "Grade point", type: "number", step: "0.01", required: true, defaultValue: r.grade_point },
-                  ]}
-                />
-              </div>
-              <ActionButton action={deleteGradeRule.bind(null, r.id)} label="Delete" variant="destructive" confirm={`Delete grade ${r.grade}?`} />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a grade</CardTitle>
+          <CardTitle>New scale</CardTitle>
+          <CardDescription>For course- or exam-specific grading. Select it on the exam.</CardDescription>
         </CardHeader>
         <CardContent>
-          <EntityForm
-            action={saveGradeRule.bind(null, null)}
-            submitLabel="Add"
-            fields={[
-              { name: "min_percent", label: "From %", type: "number", step: "0.01", required: true },
-              { name: "grade", label: "Grade", required: true },
-              { name: "grade_point", label: "Grade point", type: "number", step: "0.01", required: true },
-            ]}
-          />
+          <ScaleEditor action={saveScale} initial={{ code: "", name: "", max_point: 4, rules: [{ min_percent: 80, grade: "A+", point: 4 }, { min_percent: 0, grade: "F", point: 0 }] }} />
         </CardContent>
       </Card>
     </div>

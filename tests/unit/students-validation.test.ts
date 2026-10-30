@@ -65,6 +65,14 @@ describe("validateStudentRows", () => {
     );
   });
 
+  it("accepts optional thana, district, passport and passing year, validating their format", () => {
+    const ok = validateStudentRows([row({ thana: "Sonaimuri", district: "Noakhali", passport_no: "a1 234567", passing_year: "2019" })], lookup());
+    expect(ok.errorRows).toBe(0);
+    expect(ok.valid[0]).toMatchObject({ thana: "Sonaimuri", district: "Noakhali", passport_no: "A1234567", passing_year: 2019 });
+    const m = msgs([row({ passport_no: "X1" }), row({ passport_no: "B7654321" }), row({ passport_no: "B7654321" }), row({ passing_year: "19" })]);
+    expect(m).toEqual(expect.arrayContaining(["2:passport_no:Passport number: 5–20 letters or digits", "4:passport_no:Duplicate passport number (also on row 3)", "5:passing_year:Use a 4-digit year"]));
+  });
+
   it("validates name, date of birth, gender and email", () => {
     const m = msgs([row({ name_en: "A", date_of_birth: "2004-13-01", gender: "x", email: "bad@" })]);
     expect(m).toEqual(

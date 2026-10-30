@@ -6,7 +6,8 @@ import { z } from "zod";
 import { withRole } from "@/lib/actions";
 import { dbMessage, fail, formValues, success, zodFail, type FormState } from "@/lib/forms";
 import { ALL_STAFF, isCentral } from "@/lib/roles";
-import { optDate, optEmail, optText, reqText, uuid } from "@/lib/schemas";
+import { normalizePhoto } from "@/lib/photos";
+import { optDate, optEmail, optInt, optText, reqText, uuid } from "@/lib/schemas";
 
 const idPattern = /^[A-Z0-9-]{3,20}$/;
 const optIdent = (label: string) =>
@@ -31,7 +32,18 @@ const schema = z.object({
   phone: optText,
   email: optEmail,
   address: optText,
+  thana: optText,
+  district: optText,
   national_id: optText,
+  // Optional and PRIVATE: used only for secure result lookup, never displayed publicly.
+  passport_no: z
+    .string()
+    .optional()
+    .transform((v) => (v ? v.replace(/\s/g, "").toUpperCase() : null))
+    .refine((v) => v === null || /^[A-Z0-9]{5,20}$/.test(v), "Passport number: 5–20 letters or digits"),
+  passing_year: optInt(1950, 2100),
+  enrollment_date: optDate,
+  course_duration_override: optText,
   status: z.enum(["active", "completed", "dropped"]),
 });
 
@@ -107,5 +119,35 @@ export async function deleteStudentDocument(id: string, name: string, _prev: For
     await supabase.rpc("log_event", { p_action: "document.delete", p_table: "students", p_record_id: id, p_data: { name } });
     revalidatePath(`/admin/students/${id}`);
     return success("Document deleted.");
+  });
+}
+
+/** Upload or replace the student's photo (private; reused by all documents). */
+export async function uploadStudentPhoto(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return withRole(ALL_STAFF, async ({ supabase }) => {
+    const { data: student } = await supabase.from("students").select("institute_id").eq("id", id).maybeSingle();
+    if (!student) return fail("Student not found.");
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return fail("Choose a photo.");
+    const photo = await normalizePhoto(file);
+    if ("error" in photo) return fail(photo.error);
+    // Old photo files are kept: issued documents may still reference them.
+    const path = `institutes/${student.institute_id}/students/${id}/photo/${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from("private-documents").upload(path, photo.bytes, { contentType: "image/jpeg" });
+    if (error) return fail(error.message);
+    const { error: uErr } = await supabase.from("students").update({ photo_path: path }).eq("id", id);
+    if (uErr) return fail(dbMessage(uErr));
+    revalidatePath(`/admin/students/${id}`);
+    return success("Photo saved.");
+  });
+}
+
+export async function removeStudentPhoto(id: string, _prev: FormState): Promise<FormState> {
+  return withRole(ALL_STAFF, async ({ supabase }) => {
+    const { data, error } = await supabase.from("students").update({ photo_path: null }).eq("id", id).select("id");
+    if (error) return fail(dbMessage(error));
+    if (!data?.length) return fail("Student not found or not permitted.");
+    revalidatePath(`/admin/students/${id}`);
+    return success("Photo removed.");
   });
 }

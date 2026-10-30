@@ -13,7 +13,7 @@ export function readStudentFilters(sp: Record<string, string | string[] | undefi
 }
 
 export const STUDENT_LIST_COLUMNS =
-  "id, roll_no, registration_no, name_en, name_bn, father_name, mother_name, date_of_birth, gender, phone, email, address, status, created_at, institute_id, course_id, session_id, institutes(code, name_en), courses(code, title_en), academic_sessions(name)";
+  "id, roll_no, registration_no, name_en, name_bn, father_name, mother_name, date_of_birth, gender, phone, email, address, thana, district, passing_year, status, created_at, institute_id, course_id, session_id, institutes(code, name_en), courses(code, title_en), academic_sessions(name)";
 
 /** Student query with filters applied; RLS limits tenants to their own rows. */
 export function studentQuery(supabase: Session["supabase"], f: StudentFilters, count = false) {

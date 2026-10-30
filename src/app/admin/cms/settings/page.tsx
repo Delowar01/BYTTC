@@ -15,6 +15,7 @@ export default async function SettingsPage() {
     f("org_name_en", "Issuing organization name (English)", { required: true, section: "Identity", help: "Legal name of the organization that issues results and certificates." }),
     f("org_name_bn", "Organization name (Bangla)"),
     f("short_name", "Short name / abbreviation"),
+    f("org_registration_no", "Organization registration number", { help: "e.g. company/trust registration. Shown on result sheets and documents." }),
     f("logo_url", "Logo", { type: "image" }),
     f("tagline_en", "Tagline (English)"),
     f("tagline_bn", "Tagline (Bangla)"),

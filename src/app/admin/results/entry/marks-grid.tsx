@@ -19,6 +19,7 @@ export type MarksRow = {
   status: string | null;
   theory: number | null;
   practical: number | null;
+  viva: number | null;
   remarks: string | null;
   grade: string | null;
 };
@@ -28,9 +29,10 @@ type Props = {
   rows: MarksRow[];
   theoryFull: number;
   practicalFull: number;
+  vivaFull: number;
 };
 
-export function MarksGrid({ action, rows, theoryFull, practicalFull }: Props) {
+export function MarksGrid({ action, rows, theoryFull, practicalFull, vivaFull }: Props) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
   const val = (key: string, fallback: number | string | null) => (state.values && key in state.values ? state.values[key] : (fallback ?? "").toString());
   return (
@@ -48,6 +50,7 @@ export function MarksGrid({ action, rows, theoryFull, practicalFull }: Props) {
             <TableHead>Institute</TableHead>
             <TableHead className="w-28">Theory /{theoryFull}</TableHead>
             <TableHead className="w-28">Practical /{practicalFull}</TableHead>
+            {vivaFull > 0 && <TableHead className="w-28">Viva /{vivaFull}</TableHead>}
             <TableHead>Remarks</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
@@ -57,6 +60,7 @@ export function MarksGrid({ action, rows, theoryFull, practicalFull }: Props) {
             const locked = r.status === "published" || r.status === "unpublished";
             const tErr = state.errors?.[`t_${r.studentId}`];
             const pErr = state.errors?.[`p_${r.studentId}`];
+            const vErr = state.errors?.[`v_${r.studentId}`];
             return (
               <TableRow key={r.studentId}>
                 <TableCell className="font-mono">{r.roll}</TableCell>
@@ -70,6 +74,12 @@ export function MarksGrid({ action, rows, theoryFull, practicalFull }: Props) {
                   <Input name={`p_${r.studentId}`} aria-label={`Practical ${r.roll}`} inputMode="decimal" defaultValue={val(`p_${r.studentId}`, r.practical)} disabled={locked} aria-invalid={pErr ? true : undefined} title={pErr} className="h-8" />
                   {pErr && <p className="text-xs text-destructive">{pErr}</p>}
                 </TableCell>
+                {vivaFull > 0 && (
+                  <TableCell>
+                    <Input name={`v_${r.studentId}`} aria-label={`Viva ${r.roll}`} inputMode="decimal" defaultValue={val(`v_${r.studentId}`, r.viva)} disabled={locked} aria-invalid={vErr ? true : undefined} title={vErr} className="h-8" />
+                    {vErr && <p className="text-xs text-destructive">{vErr}</p>}
+                  </TableCell>
+                )}
                 <TableCell>
                   <Input name={`r_${r.studentId}`} aria-label={`Remarks ${r.roll}`} defaultValue={val(`r_${r.studentId}`, r.remarks)} disabled={locked} maxLength={500} className="h-8 min-w-32" />
                 </TableCell>

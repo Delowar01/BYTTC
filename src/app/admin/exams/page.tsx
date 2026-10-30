@@ -40,7 +40,7 @@ export default async function ExamsPage({ searchParams }: PageProps<"/admin/exam
                 <TableHead>Course</TableHead>
                 <TableHead>Session</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Marks (T+P / pass)</TableHead>
+                <TableHead>Marks (W+P+V / pass)</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -55,7 +55,8 @@ export default async function ExamsPage({ searchParams }: PageProps<"/admin/exam
                   <TableCell>{e.academic_sessions?.name}</TableCell>
                   <TableCell>{formatDate(e.exam_date)}</TableCell>
                   <TableCell>
-                    {Number(e.theory_full_marks)}+{Number(e.practical_full_marks)} / {Number(e.pass_marks)}
+                    {Number(e.theory_full_marks)}+{Number(e.practical_full_marks)}+{Number(e.viva_full_marks)} / {Number(e.pass_marks)}
+                    <div className="text-xs text-muted-foreground">{e.grade_scale_code}</div>
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={e.is_active ? "active" : "inactive"} />
