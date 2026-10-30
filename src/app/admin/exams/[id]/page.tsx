@@ -24,6 +24,8 @@ export default async function ExamFormPage({ params }: PageProps<"/admin/exams/[
   const fields: FieldDef[] = [
     { name: "code", label: "Exam code", required: true, defaultValue: row?.code, help: "Unique, e.g. COA-2027-JUN. Used in import files." },
     { name: "exam_date", label: "Exam date", type: "date", defaultValue: row?.exam_date },
+    { name: "exam_time", label: "Exam time", defaultValue: row?.exam_time, help: "Printed on admit cards, e.g. 10:00 AM – 1:00 PM." },
+    { name: "venue", label: "Venue", defaultValue: row?.venue, help: "Printed on admit cards." },
     { name: "name", label: "Name", required: true, defaultValue: row?.name, wide: true },
     { name: "course_id", label: "Course", type: "select", required: true, defaultValue: row?.course_id, options: (courses ?? []).map((c) => ({ value: c.id, label: `${c.code} — ${c.title_en}` })) },
     { name: "session_id", label: "Session", type: "select", required: true, defaultValue: row?.session_id, options: (sessions ?? []).map((s) => ({ value: s.id, label: s.name })) },

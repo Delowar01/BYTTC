@@ -67,14 +67,14 @@ export type Database = {
                   ]
                 },"certificates": {
                   Row: {
-                    "certificate_no": string,"created_at": string,"id": string,"institute_id": string,"issued_at": string,"issued_by": string | null,"needs_reissue": boolean,"result_id": string,"revoke_reason": string | null,"revoked_at": string | null,"revoked_by": string | null,"snapshot": NonNullable<Json>,"status": string,"student_id": string,"supersedes_id": string | null,"updated_at": string,"version": number
+                    "background_path": string | null,"background_type": string | null,"certificate_no": string,"created_at": string,"id": string,"institute_id": string,"issued_at": string,"issued_by": string | null,"layout": Json | null,"needs_reissue": boolean,"result_id": string,"revoke_reason": string | null,"revoked_at": string | null,"revoked_by": string | null,"snapshot": NonNullable<Json>,"status": string,"student_id": string,"supersedes_id": string | null,"template_id": string | null,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "certificate_no": string,"created_at"?: string,"id"?: string,"institute_id": string,"issued_at"?: string,"issued_by"?: string | null,"needs_reissue"?: boolean,"result_id": string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id": string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number
+                    "background_path"?: string | null,"background_type"?: string | null,"certificate_no": string,"created_at"?: string,"id"?: string,"institute_id": string,"issued_at"?: string,"issued_by"?: string | null,"layout"?: Json | null,"needs_reissue"?: boolean,"result_id": string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id": string,"supersedes_id"?: string | null,"template_id"?: string | null,"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "certificate_no"?: string,"created_at"?: string,"id"?: string,"institute_id"?: string,"issued_at"?: string,"issued_by"?: string | null,"needs_reissue"?: boolean,"result_id"?: string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id"?: string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number
+                    "background_path"?: string | null,"background_type"?: string | null,"certificate_no"?: string,"created_at"?: string,"id"?: string,"institute_id"?: string,"issued_at"?: string,"issued_by"?: string | null,"layout"?: Json | null,"needs_reissue"?: boolean,"result_id"?: string,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"snapshot"?: NonNullable<Json>,"status"?: string,"student_id"?: string,"supersedes_id"?: string | null,"template_id"?: string | null,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -100,6 +100,12 @@ isOneToOne: false
       columns: ["supersedes_id"]
 isOneToOne: false
       referencedRelation: "certificates"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificates_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "document_templates"
       referencedColumns: ["id"]
     }
                   ]
@@ -131,16 +137,74 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"exams": {
+                },"document_templates": {
                   Row: {
-                    "code": string,"course_id": string,"created_at": string,"exam_date": string | null,"grade_scale_code": string,"id": string,"is_active": boolean,"name": string,"pass_marks": number,"practical_full_marks": number,"session_id": string,"theory_full_marks": number,"updated_at": string,"viva_full_marks": number
+                    "activated_at": string | null,"activated_by": string | null,"background_path": string | null,"background_type": string | null,"created_at": string,"created_by": string | null,"doc_type": Database["public"]['Enums']["doc_type"],"family_id": string,"id": string,"layout": NonNullable<Json>,"name": string,"status": string,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "code": string,"course_id": string,"created_at"?: string,"exam_date"?: string | null,"grade_scale_code"?: string,"id"?: string,"is_active"?: boolean,"name": string,"pass_marks"?: number,"practical_full_marks"?: number,"session_id": string,"theory_full_marks"?: number,"updated_at"?: string,"viva_full_marks"?: number
+                    "activated_at"?: string | null,"activated_by"?: string | null,"background_path"?: string | null,"background_type"?: string | null,"created_at"?: string,"created_by"?: string | null,"doc_type": Database["public"]['Enums']["doc_type"],"family_id"?: string,"id"?: string,"layout": NonNullable<Json>,"name": string,"status"?: string,"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "code"?: string,"course_id"?: string,"created_at"?: string,"exam_date"?: string | null,"grade_scale_code"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"pass_marks"?: number,"practical_full_marks"?: number,"session_id"?: string,"theory_full_marks"?: number,"updated_at"?: string,"viva_full_marks"?: number
+                    "activated_at"?: string | null,"activated_by"?: string | null,"background_path"?: string | null,"background_type"?: string | null,"created_at"?: string,"created_by"?: string | null,"doc_type"?: Database["public"]['Enums']["doc_type"],"family_id"?: string,"id"?: string,"layout"?: NonNullable<Json>,"name"?: string,"status"?: string,"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"documents": {
+                  Row: {
+                    "background_path": string | null,"background_type": string | null,"data": NonNullable<Json>,"doc_type": Database["public"]['Enums']["doc_type"],"document_no": string,"exam_id": string | null,"id": string,"institute_id": string,"issued_at": string,"issued_by": string | null,"layout": NonNullable<Json>,"revoke_reason": string | null,"revoked_at": string | null,"revoked_by": string | null,"status": string,"student_id": string,"supersedes_id": string | null,"template_id": string | null,"updated_at": string,"valid_until": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "background_path"?: string | null,"background_type"?: string | null,"data": NonNullable<Json>,"doc_type": Database["public"]['Enums']["doc_type"],"document_no": string,"exam_id"?: string | null,"id"?: string,"institute_id": string,"issued_at"?: string,"issued_by"?: string | null,"layout": NonNullable<Json>,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"status"?: string,"student_id": string,"supersedes_id"?: string | null,"template_id"?: string | null,"updated_at"?: string,"valid_until"?: string | null
+                  }
+                  Update: {
+                    "background_path"?: string | null,"background_type"?: string | null,"data"?: NonNullable<Json>,"doc_type"?: Database["public"]['Enums']["doc_type"],"document_no"?: string,"exam_id"?: string | null,"id"?: string,"institute_id"?: string,"issued_at"?: string,"issued_by"?: string | null,"layout"?: NonNullable<Json>,"revoke_reason"?: string | null,"revoked_at"?: string | null,"revoked_by"?: string | null,"status"?: string,"student_id"?: string,"supersedes_id"?: string | null,"template_id"?: string | null,"updated_at"?: string,"valid_until"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "documents_exam_id_fkey"
+      columns: ["exam_id"]
+isOneToOne: false
+      referencedRelation: "exams"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_institute_id_fkey"
+      columns: ["institute_id"]
+isOneToOne: false
+      referencedRelation: "institutes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_student_id_fkey"
+      columns: ["student_id"]
+isOneToOne: false
+      referencedRelation: "students"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_supersedes_id_fkey"
+      columns: ["supersedes_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "documents_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "document_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"exams": {
+                  Row: {
+                    "code": string,"course_id": string,"created_at": string,"exam_date": string | null,"exam_time": string | null,"grade_scale_code": string,"id": string,"is_active": boolean,"name": string,"pass_marks": number,"practical_full_marks": number,"session_id": string,"theory_full_marks": number,"updated_at": string,"venue": string | null,"viva_full_marks": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"course_id": string,"created_at"?: string,"exam_date"?: string | null,"exam_time"?: string | null,"grade_scale_code"?: string,"id"?: string,"is_active"?: boolean,"name": string,"pass_marks"?: number,"practical_full_marks"?: number,"session_id": string,"theory_full_marks"?: number,"updated_at"?: string,"venue"?: string | null,"viva_full_marks"?: number
+                  }
+                  Update: {
+                    "code"?: string,"course_id"?: string,"created_at"?: string,"exam_date"?: string | null,"exam_time"?: string | null,"grade_scale_code"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"pass_marks"?: number,"practical_full_marks"?: number,"session_id"?: string,"theory_full_marks"?: number,"updated_at"?: string,"venue"?: string | null,"viva_full_marks"?: number
                   }
                   Relationships: [
                     {
@@ -367,14 +431,14 @@ isOneToOne: false
                   ]
                 },"site_settings": {
                   Row: {
-                    "address_bn": string | null,"address_en": string | null,"cert_signatory_left": string,"cert_signatory_right": string,"cert_title_en": string,"disclaimer_bn": string | null,"disclaimer_en": string | null,"email": string | null,"facebook_url": string | null,"footer_text_bn": string | null,"footer_text_en": string | null,"id": number,"logo_url": string | null,"map_embed_url": string | null,"office_hours_bn": string | null,"office_hours_en": string | null,"og_image_url": string | null,"org_name_bn": string | null,"org_name_en": string,"org_registration_no": string | null,"phone": string | null,"public_show_dob": boolean,"public_show_parents": boolean,"public_show_photo": boolean,"seo_description_bn": string | null,"seo_description_en": string | null,"seo_title_bn": string | null,"seo_title_en": string | null,"short_name": string | null,"tagline_bn": string | null,"tagline_en": string | null,"updated_at": string,"youtube_url": string | null
+                    "address_bn": string | null,"address_en": string | null,"cert_signatory_left": string,"cert_signatory_right": string,"cert_title_en": string,"disclaimer_bn": string | null,"disclaimer_en": string | null,"email": string | null,"facebook_url": string | null,"footer_text_bn": string | null,"footer_text_en": string | null,"id": number,"logo_url": string | null,"map_embed_url": string | null,"office_hours_bn": string | null,"office_hours_en": string | null,"og_image_url": string | null,"org_name_bn": string | null,"org_name_en": string,"org_registration_no": string | null,"phone": string | null,"public_show_dob": boolean,"public_show_parents": boolean,"public_show_photo": boolean,"registration_card_validity_years": number | null,"seo_description_bn": string | null,"seo_description_en": string | null,"seo_title_bn": string | null,"seo_title_en": string | null,"short_name": string | null,"tagline_bn": string | null,"tagline_en": string | null,"updated_at": string,"youtube_url": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en": string,"org_registration_no"?: string | null,"phone"?: string | null,"public_show_dob"?: boolean,"public_show_parents"?: boolean,"public_show_photo"?: boolean,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
+                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en": string,"org_registration_no"?: string | null,"phone"?: string | null,"public_show_dob"?: boolean,"public_show_parents"?: boolean,"public_show_photo"?: boolean,"registration_card_validity_years"?: number | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
                   }
                   Update: {
-                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en"?: string,"org_registration_no"?: string | null,"phone"?: string | null,"public_show_dob"?: boolean,"public_show_parents"?: boolean,"public_show_photo"?: boolean,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
+                    "address_bn"?: string | null,"address_en"?: string | null,"cert_signatory_left"?: string,"cert_signatory_right"?: string,"cert_title_en"?: string,"disclaimer_bn"?: string | null,"disclaimer_en"?: string | null,"email"?: string | null,"facebook_url"?: string | null,"footer_text_bn"?: string | null,"footer_text_en"?: string | null,"id"?: number,"logo_url"?: string | null,"map_embed_url"?: string | null,"office_hours_bn"?: string | null,"office_hours_en"?: string | null,"og_image_url"?: string | null,"org_name_bn"?: string | null,"org_name_en"?: string,"org_registration_no"?: string | null,"phone"?: string | null,"public_show_dob"?: boolean,"public_show_parents"?: boolean,"public_show_photo"?: boolean,"registration_card_validity_years"?: number | null,"seo_description_bn"?: string | null,"seo_description_en"?: string | null,"seo_title_bn"?: string | null,"seo_title_en"?: string | null,"short_name"?: string | null,"tagline_bn"?: string | null,"tagline_en"?: string | null,"updated_at"?: string,"youtube_url"?: string | null
                   }
                   Relationships: [
                     
@@ -417,7 +481,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "can_publish":
+            "activate_document_template":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"can_publish":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "check_rate_limit":
@@ -435,14 +502,23 @@ isOneToOne: false
 "correct_result_v2":
 { Args: { "p_display_published_on": string,"p_grade_override": string,"p_grade_point_override": number,"p_id": string,"p_practical": number,"p_reason": string,"p_remarks": string,"p_theory": number,"p_viva": number }; Returns: Json
                            },
+"course_duration_text":
+{ Args: { "months": number,"override": string }; Returns: string
+                           },
 "current_institute_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "discard_batch":
 { Args: { "p_batch_id": string }; Returns: Json
                            },
+"fmt_date":
+{ Args: { "d": string }; Returns: string
+                           },
 "generate_certificate_no":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"generate_document_no":
+{ Args: { "p_kind": string }; Returns: string
                            },
 "generate_registration_no":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -469,12 +545,15 @@ isOneToOne: false
                            },
 "issue_certificate_internal":
 { Args: { "p_result_id": string,"p_supersedes"?: string }; Returns: {
-              "certificate_no": string,
+              "background_path": string | null,
+"background_type": string | null,
+"certificate_no": string,
 "created_at": string,
 "id": string,
 "institute_id": string,
 "issued_at": string,
 "issued_by": string | null,
+"layout": Json | null,
 "needs_reissue": boolean,
 "result_id": string,
 "revoke_reason": string | null,
@@ -484,6 +563,7 @@ isOneToOne: false
 "status": string,
 "student_id": string,
 "supersedes_id": string | null,
+"template_id": string | null,
 "updated_at": string,
 "version": number
             }
@@ -496,11 +576,46 @@ isOneToOne: false
 "issue_certificates":
 { Args: { "p_result_ids": (string)[] }; Returns: Json
                            },
+"issue_document_internal":
+{ Args: { "p_exam": string,"p_extra": Json,"p_student": string,"p_supersedes"?: string,"p_type": Database["public"]['Enums']["doc_type"] }; Returns: {
+              "background_path": string | null,
+"background_type": string | null,
+"data": NonNullable<Json>,
+"doc_type": Database["public"]['Enums']["doc_type"],
+"document_no": string,
+"exam_id": string | null,
+"id": string,
+"institute_id": string,
+"issued_at": string,
+"issued_by": string | null,
+"layout": NonNullable<Json>,
+"revoke_reason": string | null,
+"revoked_at": string | null,
+"revoked_by": string | null,
+"status": string,
+"student_id": string,
+"supersedes_id": string | null,
+"template_id": string | null,
+"updated_at": string,
+"valid_until": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "documents"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"issue_documents":
+{ Args: { "p_exam": string,"p_extra": Json,"p_students": (string)[],"p_type": Database["public"]['Enums']["doc_type"] }; Returns: Json
+                           },
 "issue_exam_certificates":
 { Args: { "p_exam_id": string }; Returns: Json
                            },
 "log_event":
 { Args: { "p_action": string,"p_data"?: Json,"p_reason"?: string,"p_record_id": string,"p_table": string }; Returns: undefined
+                           },
+"org_document_data":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "public_institutes":
 { Args: { "p_search"?: string }; Returns: {
@@ -527,6 +642,11 @@ isOneToOne: false
               "certificate_no": string,"course_title": string,"grade": string,"grade_point": number,"institute_name": string,"issued_at": string,"registration_no": string,"revoked_at": string,"roll_no": string,"session_name": string,"status": string,"student_name": string,"superseded_by": string
             }[]
                            },
+"public_verify_document":
+{ Args: { "p_no": string }; Returns: {
+              "course_title": string,"doc_type": string,"document_no": string,"exam_name": string,"institute_name": string,"issued_at": string,"registration_no": string,"revoked_at": string,"roll_no": string,"session_name": string,"status": string,"student_name": string,"superseded_by": string,"valid_until": string
+            }[]
+                           },
 "public_verify_result":
 { Args: { "p_code": string,"p_version": number }; Returns: {
               "course_title": string,"current_version": number,"display_published_on": string,"exam_name": string,"full_marks": number,"grade": string,"grade_point": number,"institute_name": string,"registration_no": string,"roll_no": string,"status": string,"student_name": string,"total_marks": number
@@ -538,6 +658,9 @@ isOneToOne: false
 "reissue_certificate":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
+"reissue_document":
+{ Args: { "p_extra": Json,"p_id": string,"p_reason": string }; Returns: Json
+                           },
 "report_results":
 { Args: { "p_exam_id"?: string }; Returns: {
               "exam_code": string,"exam_id": string,"exam_name": string,"grade": string,"institute_code": string,"institute_name": string,"is_pass": boolean,"n": number,"status": string
@@ -548,7 +671,13 @@ isOneToOne: false
               "course_code": string,"institute_code": string,"institute_name": string,"n": number,"session_name": string,"status": string
             }[]
                            },
+"result_document_data":
+{ Args: { "p_result": string }; Returns: Json
+                           },
 "revoke_certificate":
+{ Args: { "p_id": string,"p_reason": string }; Returns: Json
+                           },
+"revoke_document":
 { Args: { "p_id": string,"p_reason": string }; Returns: Json
                            },
 "rollback_result_batch":
@@ -563,6 +692,9 @@ isOneToOne: false
 "set_results_publication":
 { Args: { "p_ids": (string)[],"p_publish": boolean }; Returns: Json
                            },
+"student_document_data":
+{ Args: { "p_student": string }; Returns: Json
+                           },
 "submit_results":
 { Args: { "p_exam_id": string }; Returns: Json
                            },
@@ -571,7 +703,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "super_admin"|"central_admin"|"central_staff"|"institute_admin"|"institute_staff","batch_status": "validated"|"committed"|"published"|"unpublished"|"rolled_back"|"failed","institute_status": "pending"|"approved"|"rejected"|"suspended","result_status": "draft"|"submitted"|"published"|"unpublished","student_status": "active"|"completed"|"dropped"
+            "app_role": "super_admin"|"central_admin"|"central_staff"|"institute_admin"|"institute_staff","batch_status": "validated"|"committed"|"published"|"unpublished"|"rolled_back"|"failed","doc_type": "certificate"|"marksheet"|"admit_card"|"registration_card","institute_status": "pending"|"approved"|"rejected"|"suspended","result_status": "draft"|"submitted"|"published"|"unpublished","student_status": "active"|"completed"|"dropped"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -691,7 +823,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["super_admin", "central_admin", "central_staff", "institute_admin", "institute_staff"],"batch_status": ["validated", "committed", "published", "unpublished", "rolled_back", "failed"],"institute_status": ["pending", "approved", "rejected", "suspended"],"result_status": ["draft", "submitted", "published", "unpublished"],"student_status": ["active", "completed", "dropped"]
+            "app_role": ["super_admin", "central_admin", "central_staff", "institute_admin", "institute_staff"],"batch_status": ["validated", "committed", "published", "unpublished", "rolled_back", "failed"],"doc_type": ["certificate", "marksheet", "admit_card", "registration_card"],"institute_status": ["pending", "approved", "rejected", "suspended"],"result_status": ["draft", "submitted", "published", "unpublished"],"student_status": ["active", "completed", "dropped"]
           }
         }
 } as const

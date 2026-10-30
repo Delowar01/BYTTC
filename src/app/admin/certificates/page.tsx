@@ -23,23 +23,37 @@ export default async function CertificatesPage({ searchParams }: PageProps<"/adm
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const status = sp.status === "valid" || sp.status === "revoked" ? sp.status : "";
+  const exam = typeof sp.exam === "string" ? sp.exam : "";
   const { from, to, page } = pageRange(Number(sp.page));
   const canPublish = PUBLISHERS.includes(profile.role);
 
-  let query = supabase.from("certificates").select("id, certificate_no, status, issued_at, revoke_reason, snapshot", { count: "exact" }).order("issued_at", { ascending: false }).range(from, to);
+  let query = supabase
+    .from("certificates")
+    .select("id, certificate_no, status, issued_at, revoke_reason, snapshot, results!inner(exam_id)", { count: "exact" })
+    .order("issued_at", { ascending: false })
+    .range(from, to);
+  if (exam) query = query.eq("results.exam_id", exam);
   if (q) {
     const t = escapeLike(q);
     query = query.or(`certificate_no.ilike.%${t}%,snapshot->>roll_no.ilike.%${t}%,snapshot->>student_name.ilike.%${t}%`);
   }
   if (status) query = query.eq("status", status);
-  const [{ data: certs, count, error }, { data: exams }] = await Promise.all([
+  const [{ data: certs, count, error }, { data: exams }, { data: template }, validForExam] = await Promise.all([
     query,
-    canPublish ? supabase.from("exams").select("id, code, name").order("code") : Promise.resolve({ data: [] }),
+    supabase.from("exams").select("id, code, name").order("code"),
+    supabase.from("document_templates").select("name, version").eq("doc_type", "certificate").eq("status", "active").maybeSingle(),
+    exam
+      ? supabase.from("certificates").select("id, results!inner(exam_id)", { count: "exact", head: true }).eq("results.exam_id", exam).eq("status", "valid")
+      : Promise.resolve({ count: 0 }),
   ]);
+  const parts = Math.ceil((validForExam.count ?? 0) / 50);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Certificates" description="Certificates are issued for published, passing results. Each has a unique number and a QR code linking to public verification." />
+      <PageHeader
+        title="Certificates"
+        description={`Certificates are issued for published, passing results. Each has a unique number and a QR code linking to public verification. New certificates use ${template ? `the template “${template.name}” v${template.version}` : "the built-in design (no certificate template is active)"}; issued certificates keep their original design.`}
+      />
       {canPublish && (
         <Card>
           <CardHeader>
@@ -56,6 +70,14 @@ export default async function CertificatesPage({ searchParams }: PageProps<"/adm
         <CardContent>
           <form className="mb-4 flex flex-wrap gap-2">
             <Input name="q" defaultValue={q} placeholder="Certificate no., roll or name" className="max-w-xs" />
+            <NativeSelect name="exam" defaultValue={exam} className="max-w-xs" aria-label="Filter by exam">
+              <option value="">All exams</option>
+              {exams?.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.code} — {e.name}
+                </option>
+              ))}
+            </NativeSelect>
             <NativeSelect name="status" defaultValue={status} className="w-36" aria-label="Status">
               <option value="">Any status</option>
               <option value="valid">valid</option>
@@ -63,6 +85,18 @@ export default async function CertificatesPage({ searchParams }: PageProps<"/adm
             </NativeSelect>
             <Button variant="outline" type="submit">Filter</Button>
           </form>
+          {parts > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Bulk PDF of valid certificates{parts > 1 ? " (50 per file)" : ""}:</span>
+              {Array.from({ length: parts }, (_, i) => (
+                <Button key={i} variant="outline" size="sm" asChild>
+                  <a href={`/admin/certificates/pdf?exam=${exam}&part=${i + 1}`}>
+                    <FileDown /> {parts > 1 ? `Part ${i + 1}` : "Download all"}
+                  </a>
+                </Button>
+              ))}
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
@@ -116,7 +150,7 @@ export default async function CertificatesPage({ searchParams }: PageProps<"/adm
               })}
             </TableBody>
           </Table>
-          <Pagination page={page} total={count ?? 0} basePath="/admin/certificates" params={{ q, status }} />
+          <Pagination page={page} total={count ?? 0} basePath="/admin/certificates" params={{ q, status, exam }} />
         </CardContent>
       </Card>
     </div>

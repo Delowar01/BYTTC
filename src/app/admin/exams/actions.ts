@@ -15,6 +15,8 @@ const schema = z
     course_id: uuid("Course"),
     session_id: uuid("Session"),
     exam_date: optDate,
+    exam_time: z.string().trim().max(40, "Exam time is too long").optional().transform((v) => v || null),
+    venue: z.string().trim().max(200, "Venue is too long").optional().transform((v) => v || null),
     theory_full_marks: reqNumber("Theory full marks", 0, 1000),
     practical_full_marks: reqNumber("Practical full marks", 0, 1000),
     viva_full_marks: reqNumber("Viva full marks", 0, 1000),

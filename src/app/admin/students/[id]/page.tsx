@@ -12,6 +12,9 @@ import { requireRole } from "@/lib/auth";
 import { ALL_STAFF, isCentral } from "@/lib/roles";
 import { FileUploadForm } from "@/components/admin/file-upload-form";
 import { courseDuration, photoUrl } from "@/lib/photos";
+import { documentState } from "@/lib/documents/state";
+import { DOC_TYPE_LABELS, type DocType } from "@/lib/documents/types";
+import { formatDate } from "@/lib/utils";
 import { deleteStudent, deleteStudentDocument, removeStudentPhoto, saveStudent, uploadStudentDocument, uploadStudentPhoto } from "../actions";
 
 export default async function StudentFormPage({ params, searchParams }: PageProps<"/admin/students/[id]">) {
@@ -26,7 +29,7 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
     if (!data) notFound();
     row = data;
   }
-  const [{ data: institutes }, { data: allCourses }, { data: sessions }, results, { data: assigned }] = await Promise.all([
+  const [{ data: institutes }, { data: allCourses }, { data: sessions }, results, { data: assigned }, { data: issuedDocs }, { data: certs }] = await Promise.all([
     supabase.from("institutes").select("id, code, name_en, status").order("code"),
     supabase.from("courses").select("id, code, title_en, duration_months").order("code"),
     supabase.from("academic_sessions").select("id, name").order("start_date", { ascending: false }),
@@ -34,7 +37,23 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
       ? Promise.resolve({ data: [] })
       : supabase.from("results").select("id, total_marks, grade, status, exams(code, name)").eq("student_id", id),
     central ? Promise.resolve({ data: null }) : supabase.from("institute_courses").select("course_id"),
+    isNew
+      ? Promise.resolve({ data: [] })
+      : supabase.from("documents").select("id, doc_type, document_no, status, valid_until, revoke_reason, issued_at, data").eq("student_id", id).order("issued_at", { ascending: false }),
+    isNew ? Promise.resolve({ data: [] }) : supabase.from("certificates").select("id, certificate_no, status, issued_at, revoke_reason").eq("student_id", id).order("issued_at", { ascending: false }),
   ]);
+  const issued = [
+    ...(certs ?? []).map((c) => ({ key: c.id, type: "Certificate", no: c.certificate_no, state: c.status, issuedAt: c.issued_at, href: `/admin/certificates/${c.id}/pdf`, detail: null as string | null })),
+    ...(issuedDocs ?? []).map((d) => ({
+      key: d.id,
+      type: DOC_TYPE_LABELS[d.doc_type as DocType],
+      no: d.document_no,
+      state: documentState(d),
+      issuedAt: d.issued_at,
+      href: `/admin/documents/${d.id}/pdf`,
+      detail: `/admin/documents/${d.id}`,
+    })),
+  ].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt));
   // Institute users may only enrol in courses assigned to their institute.
   const allowed = assigned ? new Set(assigned.map((a) => a.course_id)) : null;
   const courses = (allCourses ?? []).filter((c) => !allowed || allowed.has(c.id) || c.id === row?.course_id);
@@ -165,6 +184,45 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
             <div className="mt-4">
               <ActionButton action={deleteStudent.bind(null, row.id)} label="Delete student" variant="destructive" confirm={`Delete ${row.name_en} (roll ${row.roll_no})?`} />
             </div>
+          </CardContent>
+        </Card>
+      )}
+      {row && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Issued documents</CardTitle>
+            <CardDescription>Certificates, admit cards and registration cards issued to this student. Issue new ones from the Academic documents menu.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table data-testid="issued-documents">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Number</TableHead>
+                  <TableHead>Issued</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {!issued.length && <EmptyRow colSpan={5} text="No documents issued yet." />}
+                {issued.map((d) => (
+                  <TableRow key={d.key}>
+                    <TableCell>{d.type}</TableCell>
+                    <TableCell className="font-mono text-xs">{d.detail ? <Link href={d.detail} className="hover:underline">{d.no}</Link> : d.no}</TableCell>
+                    <TableCell>{formatDate(d.issuedAt)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={d.state} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <a className="text-primary hover:underline" href={d.href} target="_blank" rel="noopener">
+                        PDF
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}

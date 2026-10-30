@@ -45,6 +45,7 @@ const settingsSchema = z.object({
   cert_title_en: reqText("Certificate title", 80),
   cert_signatory_left: reqText("Left signatory", 60),
   cert_signatory_right: reqText("Right signatory", 60),
+  registration_card_validity_years: optInt(1, 30),
 });
 
 export async function saveSettings(_prev: FormState, formData: FormData): Promise<FormState> {

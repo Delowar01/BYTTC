@@ -3,7 +3,7 @@ import { login } from "./helpers";
 
 test("admin console is usable on a phone", async ({ page }) => {
   await login(page);
-  for (const path of ["/admin", "/admin/students", "/admin/results", "/admin/results/import", "/admin/imports", "/admin/certificates", "/admin/reports", "/admin/cms/pages"]) {
+  for (const path of ["/admin", "/admin/students", "/admin/results", "/admin/results/import", "/admin/imports", "/admin/certificates", "/admin/marksheets", "/admin/admit-cards", "/admin/registration-cards", "/admin/templates", "/admin/reports", "/admin/cms/pages"]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     expect(overflow, `${path} overflows horizontally`).toBe(false);

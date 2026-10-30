@@ -12,6 +12,7 @@ const COMMON: TokenDef[] = [
   { key: "document_no", label: "Document / serial number", sample: "STTN-26-SAMPLE01" },
   { key: "issue_date", label: "Issue date", sample: "30 October 2026" },
   { key: "verify_code", label: "Verification code", sample: "SAMPLE7KQ2M9X" },
+  { key: "verify_url", label: "Verification link", sample: "https://example.org/verify?no=STTN-26-SAMPLE01" },
   { key: "student_name", label: "Student name", sample: "Rafiq Ahmed (Sample)" },
   { key: "student_name_bn", label: "Student name (Bangla)", sample: "রফিক আহমেদ" },
   { key: "father_name", label: "Father's name", sample: "Karim Ahmed" },
@@ -81,3 +82,16 @@ export function sampleData(type: DocType, siteUrl: string): Record<string, strin
 }
 
 export const SAMPLE_MARKS: MarksRow = { theory: "122", practical: "19", viva: "17", total: "158", full: "200", grade: "A", point: "3.75" };
+
+/** Replace {tokens} with data values; reports whether every token was empty. */
+export function fillTemplate(text: string, data: Record<string, string | undefined>) {
+  let tokens = 0;
+  let filled = 0;
+  const out = text.replace(/\{([a-z0-9_]+)\}/g, (_, key: string) => {
+    tokens++;
+    const v = data[key] ?? "";
+    if (v !== "") filled++;
+    return v;
+  });
+  return { text: out, empty: tokens > 0 && filled === 0 };
+}

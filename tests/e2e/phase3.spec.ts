@@ -5,7 +5,7 @@ const MAILPIT = "http://127.0.0.1:54324";
 
 async function issueForSeedExam(page: Page) {
   await page.goto("/admin/certificates");
-  await page.getByLabel("Exam").selectOption({ label: "COA-2026-JUN — Computer Office Application — Final (Jun 2026)" });
+  await page.getByLabel("Exam", { exact: true }).selectOption({ label: "COA-2026-JUN — Computer Office Application — Final (Jun 2026)" });
   await page.getByRole("button", { name: "Issue certificates" }).click();
   await expect(page.getByRole("status").filter({ hasText: /certificate\(s\) issued/ })).toBeVisible();
 }

@@ -2,7 +2,10 @@ import "server-only";
 import { degrees, PDFDocument, rgb, StandardFonts, type Color, type PDFEmbeddedPage, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
 import { shapeBangla } from "@/lib/bangla-text";
+import { fillTemplate } from "./fields";
 import type { Field, Layout, MarksRow, RenderPage, TextField } from "./types";
+
+export { fillTemplate };
 
 const A4: [number, number] = [595.28, 841.89];
 const INK = rgb(0.12, 0.16, 0.18);
@@ -22,19 +25,6 @@ export function hexColor(value: string | undefined, fallback: Color = INK): Colo
   if (!m) return fallback;
   const n = parseInt(m[1], 16);
   return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
-}
-
-/** Replace {tokens} with data values; reports whether every token was empty. */
-export function fillTemplate(text: string, data: Record<string, string | undefined>) {
-  let tokens = 0;
-  let filled = 0;
-  const out = text.replace(/\{([a-z0-9_]+)\}/g, (_, key: string) => {
-    tokens++;
-    const v = data[key] ?? "";
-    if (v !== "") filled++;
-    return v;
-  });
-  return { text: out, empty: tokens > 0 && filled === 0 };
 }
 
 const isBangla = (ch: string) => /[ঀ-৿‌‍]/.test(ch);
@@ -282,7 +272,20 @@ export async function renderDocumentPdf(pages: RenderPage[], meta: { title: stri
       }
     }
     if (p.overlay) {
-      page.drawText(winAnsi(p.overlay), { x: w * 0.18, y: h * 0.35, size: Math.min(w, h) * 0.18, font: fonts.sansBold, color: rgb(0.85, 0.1, 0.1), opacity: 0.25, rotate: degrees(25) });
+      // Diagonal stamp, centred and sized to fit the page width.
+      const t = winAnsi(p.overlay);
+      const angle = (25 * Math.PI) / 180;
+      const size = Math.min(Math.min(w, h) * 0.18, (w * 0.8) / (fonts.sansBold.widthOfTextAtSize(t, 1) * Math.cos(angle)));
+      const tw = fonts.sansBold.widthOfTextAtSize(t, size);
+      page.drawText(t, {
+        x: (w - tw * Math.cos(angle)) / 2 + (size * 0.35) * Math.sin(angle),
+        y: (h - tw * Math.sin(angle)) / 2 - (size * 0.35) * Math.cos(angle),
+        size,
+        font: fonts.sansBold,
+        color: rgb(0.85, 0.1, 0.1),
+        opacity: 0.25,
+        rotate: degrees(25),
+      });
     }
   }
   return pdf.save();

@@ -90,7 +90,7 @@ test("admin marksheet: single and bulk PDF", async ({ page }) => {
   await page.goto("/admin/results");
   await page.getByLabel("Exam").selectOption({ label: "COA-2026-JUN" });
   await page.getByRole("button", { name: "Filter" }).click();
-  const bulkHref = await page.getByRole("link", { name: /Marksheets/ }).first().getAttribute("href");
+  const bulkHref = await page.getByRole("main").getByRole("link", { name: /Marksheets/ }).first().getAttribute("href");
   const bulk = await page.request.get(bulkHref!);
   expect(bulk.headers()["content-type"]).toBe("application/pdf");
   const { PDFDocument } = await import("pdf-lib");

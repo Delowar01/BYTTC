@@ -43,6 +43,7 @@ export default async function SettingsPage() {
     f("cert_title_en", "Certificate title", { required: true, section: "Certificates", help: "Printed on PDF certificates with the organization name, logo and disclaimer above." }),
     f("cert_signatory_left", "Left signature label", { required: true }),
     f("cert_signatory_right", "Right signature label", { required: true }),
+    f("registration_card_validity_years", "Registration card validity (years)", { type: "number", section: "Academic documents", help: "Default validity of new registration cards. Leave empty for no expiry; it can be changed per card when reissuing." }),
   ];
   return (
     <div className="max-w-4xl">

@@ -16,6 +16,8 @@ const VARIANTS: Record<string, "success" | "warning" | "destructive" | "secondar
   suspended: "destructive",
   failed: "destructive",
   revoked: "destructive",
+  superseded: "outline",
+  expired: "warning",
   rolled_back: "outline",
   dropped: "outline",
   inactive: "outline",

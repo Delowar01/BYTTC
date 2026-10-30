@@ -13,7 +13,7 @@ import { formatDate } from "@/lib/utils";
 
 export const generateMetadata = () => pageMetadata("verify");
 
-/** Certificate verification. GET ?no=… so QR codes can link straight here. */
+/** Certificate, admit card and registration card verification. GET ?no=… so QR codes can link straight here. */
 export default async function VerifyPage({ searchParams }: PageProps<"/verify">) {
   const locale = await getLocale();
   const t = getDictionary(locale);
@@ -38,15 +38,22 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
 
   let outcome: "none" | "limited" | "not_found" | "found" = "none";
   let cert = null;
+  let doc = null;
   if (no) {
     if (!/^[A-Z0-9-]{4,40}$/.test(no)) outcome = "not_found";
     else if (!(await allowRequest("certificate_verify", 60, "10 minutes"))) outcome = "limited";
     else {
-      const { data } = await createAdminClient().rpc("public_verify_certificate", { p_certificate_no: no });
+      const admin = createAdminClient();
+      const { data } = await admin.rpc("public_verify_certificate", { p_certificate_no: no });
       cert = data?.[0] ?? null;
-      outcome = cert ? "found" : "not_found";
+      if (!cert) {
+        const { data: docs } = await admin.rpc("public_verify_document", { p_no: no });
+        doc = docs?.[0] ?? null;
+      }
+      outcome = cert || doc ? "found" : "not_found";
     }
   }
+  const docStatus = doc ? ({ valid: t.docValid, revoked: t.docRevoked, superseded: t.docSuperseded, expired: t.docExpired } as Record<string, string>)[doc.status] : "";
 
   return (
     <>
@@ -55,7 +62,7 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
         <Card>
           <CardContent>
             <form className="flex flex-col gap-2 sm:flex-row" role="search">
-              <Input name="no" defaultValue={no} required placeholder={t.certificateNo} aria-label={t.certificateNo} maxLength={40} />
+              <Input name="no" defaultValue={no} required placeholder={t.documentNo} aria-label={t.documentNo} maxLength={40} />
               <Button type="submit">{t.verify}</Button>
             </form>
           </CardContent>
@@ -145,6 +152,51 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
                   {t.certSuperseded}{" "}
                   <a className="font-mono text-primary underline" href={`/verify?no=${cert.superseded_by}`}>
                     {cert.superseded_by}
+                  </a>
+                </p>
+              )}
+              <PrintButton label={t.print} />
+            </CardContent>
+          </Card>
+        )}
+        {outcome === "found" && doc && (
+          <Card className={doc.status === "valid" ? "border-emerald-400" : "border-destructive"} data-testid="doc-card">
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                {doc.status === "valid" ? <BadgeCheck className="size-10 text-emerald-600" /> : <ShieldX className="size-10 text-destructive" />}
+                <div>
+                  <p className="text-sm text-muted-foreground">{doc.doc_type === "admit_card" ? t.admitCard : t.registrationCard}</p>
+                  <p className="text-lg font-semibold" data-testid="doc-status" data-status={doc.status}>
+                    {docStatus}
+                  </p>
+                </div>
+              </div>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                {[
+                  [t.documentNo, doc.document_no],
+                  [t.studentName, doc.student_name],
+                  [t.rollNo, doc.roll_no],
+                  [t.registrationNo, doc.registration_no],
+                  [t.institute, doc.institute_name],
+                  [t.course, doc.course_title],
+                  [t.session, doc.session_name],
+                  ...(doc.exam_name ? [[t.exam, doc.exam_name]] : []),
+                  [t.issuedOn, formatDate(doc.issued_at, locale)],
+                  ...(doc.valid_until ? [[t.validUntil, formatDate(doc.valid_until, locale)]] : []),
+                  ...(doc.revoked_at ? [[t.revokedOn, formatDate(doc.revoked_at, locale)]] : []),
+                  [t.issuedBy, pick(locale, settings.org_name_en, settings.org_name_bn)],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4 border-b border-dashed py-1">
+                    <dt className="text-muted-foreground">{k}</dt>
+                    <dd className="text-right font-medium">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              {doc.superseded_by && (
+                <p className="text-sm" data-testid="doc-superseded">
+                  {t.docReplacedBy}{" "}
+                  <a className="font-mono text-primary underline" href={`/verify?no=${doc.superseded_by}`}>
+                    {doc.superseded_by}
                   </a>
                 </p>
               )}

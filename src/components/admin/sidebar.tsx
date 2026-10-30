@@ -5,6 +5,10 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Award,
+  BookUser,
+  FileSpreadsheet,
+  IdCard,
+  LayoutTemplate,
   FilePen,
   BadgeCheck,
   Plus,
@@ -38,6 +42,10 @@ import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = {
   Award,
+  BookUser,
+  FileSpreadsheet,
+  IdCard,
+  LayoutTemplate,
   FilePen,
   BadgeCheck,
   Plus,
