@@ -30,5 +30,9 @@ export async function resolveImageField(
     return { url: supabase.storage.from("public-media").getPublicUrl(path).data.publicUrl };
   }
   const typed = formData.get(field);
-  return { url: typeof typed === "string" && typed.trim() !== "" ? typed.trim() : null };
+  const url = typeof typed === "string" ? typed.trim() : "";
+  if (!url) return { url: null };
+  // Only web URLs or site paths: blocks javascript:/data: links rendered on public pages.
+  if (!/^(https?:\/\/|\/(?!\/))/i.test(url)) return { url: null, error: "Enter a full https:// URL or a site path starting with /." };
+  return { url };
 }

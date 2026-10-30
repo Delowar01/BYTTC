@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/admin/toaster";
 import { initialFormState, type FormState } from "@/lib/forms";
 
 type Props = {
@@ -16,13 +17,21 @@ type Props = {
   reasonPrompt?: string;
 };
 
-/** A single-button form for row actions (delete, approve, publish, ...). */
+/**
+ * A single-button form for row actions (delete, approve, publish, ...).
+ * Results are reported as toasts because a successful action usually
+ * removes or replaces this very button.
+ */
 export function ActionButton({ action, label, confirm, variant = "outline", size = "sm", fields, reasonPrompt }: Props) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const [, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
+    const result = await action(prev, formData);
+    if (result.message) toast(result.message, result.ok);
+    return result;
+  }, initialFormState);
   return (
     <form
       action={formAction}
-      className="inline-flex flex-col items-start gap-1"
+      className="inline-flex"
       onSubmit={(e) => {
         if (reasonPrompt) {
           const reason = window.prompt(reasonPrompt);
@@ -43,11 +52,6 @@ export function ActionButton({ action, label, confirm, variant = "outline", size
         {pending && <Loader2 className="animate-spin" />}
         {label}
       </Button>
-      {state.message && (
-        <span role="status" className={state.ok ? "text-xs text-emerald-700" : "text-xs text-destructive"}>
-          {state.message}
-        </span>
-      )}
     </form>
   );
 }

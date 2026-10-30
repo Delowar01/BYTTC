@@ -12,6 +12,13 @@ import type { Database } from "../src/lib/database.types";
 
 type Role = Database["public"]["Enums"]["app_role"];
 
+// Local convenience: read .env.local when present (shell variables take precedence).
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // no .env.local — rely on the environment
+}
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const email = process.env.SEED_SUPER_ADMIN_EMAIL;

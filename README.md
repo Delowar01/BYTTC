@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TTIMS — Technical Training Institute Management System
 
-## Getting Started
+A bilingual (Bangla / English) website and management platform for a network of
+technical training institutes: public website with CMS, institute directory,
+result search and certificate verification, plus a Super Admin console with
+bulk result upload and a controlled publication workflow.
 
-First, run the development server:
+> **Branding.** The default organization name ("Sarathi Technical Training
+> Network") is a placeholder. Before going live, set the legal name of the
+> actual issuing organization, its logo, contact details and the accreditation
+> disclaimer in **Admin → Site settings**. Do not claim government
+> accreditation unless the organization is authorized to.
+
+## Stack
+
+Next.js 16 (App Router, server actions) · TypeScript · Tailwind CSS 4 ·
+shadcn/ui components · Supabase (PostgreSQL, Auth, Storage, RLS) · Vercel.
+
+## Local development
+
+Prerequisites: Node 20.9+, Docker, [Supabase CLI](https://supabase.com/docs/guides/cli).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+supabase start                      # local Postgres, Auth, Storage, API
+cp .env.example .env.local          # fill keys from `supabase status`
+supabase db reset                   # apply migrations + synthetic seed data
+npm install
+npm run seed:users -- --test-users  # Super Admin + role test accounts (local only)
+npm run dev                         # http://localhost:3000, staff login at /login
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Quote env values that contain `#` (Node's env-file parser treats an unquoted
+`#` as a comment).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Local test accounts (password = `SEED_SUPER_ADMIN_PASSWORD`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email | Role |
+| --- | --- |
+| superadmin@example.org | Super Admin |
+| central.admin@example.org | Central Admin (can publish) |
+| central.staff@example.org | Central Staff (cannot publish) |
+| dhk.admin@example.org / dhk.staff@example.org | Institute admin / staff (DHK-001) |
+| ctg.admin@example.org | Institute admin (CTG-001) |
+| khl.admin@example.org | Institute admin of a **suspended** institute (no access) |
 
-## Learn More
+All seed data (institutes, students, results) is synthetic.
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test           # unit tests + database security tests (needs local Supabase)
+npm run test:e2e   # Playwright end-to-end tests (needs `npm run build` or a running app)
+npm run lint && npm run typecheck
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `tests/unit` — spreadsheet parsing (CSV/XLSX, size/type/encoding checks),
+  result and student row validation, CSV injection, URL safety.
+- `tests/db` — runs real queries as each role: RLS and tenant isolation,
+  publication guard, no auto-publish, correction reasons, audit trail,
+  atomic batch commit, full batch lifecycle.
+- `tests/e2e` — browser flows: login, CRUD, institute approval, CMS edits,
+  bulk result upload (errors → commit → publish → public search → unpublish →
+  rollback), student import, bilingual public site, rate limiting, mobile layout.
 
-## Deploy on Vercel
+## Roles and permissions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Enforced twice: in server actions (`assertRole`) and in the database (RLS
+policies, triggers and RPC checks).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Capability | Super Admin | Central Admin | Central Staff | Institute Admin | Institute Staff |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| Students (CRUD, import, export) | all | all | all | own institute | own institute (no delete) |
+| Institutes, courses, sessions, exams | ✓ | ✓ | ✓ (no delete) | – | – |
+| Approve / suspend institutes | ✓ | ✓ | – | – | – |
+| Upload results | ✓ | ✓ | ✓ | own institute (submitted) | own institute (submitted) |
+| Publish / unpublish / correct published results | ✓ | ✓ | – | – | – |
+| CMS, grading rules, audit log | ✓ | ✓ | – | – | – |
+| User accounts | ✓ | – | – | – | – |
+
+A suspended institute's users lose all data access immediately.
+
+## Bulk result upload
+
+1. **Template** — Admin → Bulk result upload → download the Excel template
+   (also lists current exam and institute codes) or the CSV template.
+2. **Upload & validate** — `.xlsx` or `.csv`, max 4 MB / 20,000 rows. Every row
+   is checked: required columns, roll + registration match, institute
+   (exists, approved, is the student's), course, exam (exists, active, belongs
+   to the course), marks (numeric, ≤ full marks, ≤ 2 decimals), duplicates in
+   the file, and results that already exist. All errors are listed (and
+   downloadable as CSV). Files with errors cannot be committed.
+3. **Commit** — all rows are inserted in one database transaction as
+   **draft** results. The database refuses to create published results, so
+   imports can never auto-publish.
+4. **Publish / unpublish** — only Super/Central Admins. Published results
+   appear in public search (roll + registration number, public fields only).
+5. **Corrections** — editing a published result requires a reason; the
+   version number increments and the before/after values are audited.
+6. **Rollback** — committed or unpublished batches can be rolled back (reason
+   required). The original file, SHA-256 and full status history are kept.
+
+## Security notes
+
+- Public sign-up is disabled; only a Super Admin creates accounts.
+- The service-role key is used only in server code: creating users, the
+  rate limiter, and the public result/certificate lookups (so per-client rate
+  limits cannot be bypassed). It is never exposed to the browser.
+- Public result search returns only published results and only public fields
+  (no parents' names, contact details, date of birth or ID numbers).
+  Registration numbers are random to prevent enumeration.
+- National ID / birth registration numbers are never exported and are
+  redacted from the audit trail. Uploaded files live in a private bucket and
+  are served via 60-second signed URLs.
+- CMS Markdown is rendered without raw HTML; CMS URLs are restricted to
+  `https://` or site paths at both app and database level.
+
+## Deploying (Vercel + Supabase)
+
+1. Create a Supabase project; run `supabase link --project-ref <ref>` and
+   `supabase db push` to apply `supabase/migrations` (do **not** run `seed.sql`
+   in production).
+2. In Supabase Auth settings: disable sign-ups, set the Site URL to the
+   production domain, configure SMTP for password-reset emails.
+3. Create a Vercel project from this repository and set
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY` (server-only) and `NEXT_PUBLIC_SITE_URL`.
+4. Bootstrap the first Super Admin from a trusted machine:
+   `SEED_SUPER_ADMIN_EMAIL=… SEED_SUPER_ADMIN_PASSWORD=… npm run seed:users`
+   (with the production URL and service key in the environment).
+5. Sign in, then set the organization identity in **Site settings**.

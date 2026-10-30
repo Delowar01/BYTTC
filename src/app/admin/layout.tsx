@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ExternalLink, LogOut } from "lucide-react";
 import { Sidebar } from "@/components/admin/sidebar";
+import { Toaster } from "@/components/admin/toaster";
 import { NAV_ITEMS } from "@/components/admin/nav-items";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
@@ -46,6 +47,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         </header>
         <main className="flex-1 p-4 lg:p-8">{children}</main>
       </div>
+      <Toaster />
     </div>
   );
 }
