@@ -7,8 +7,12 @@ const lookup = (tenant: string | null = null): StudentLookup => ({
     ["INS-B", { id: "i2", status: "approved" }],
     ["INS-S", { id: "i3", status: "suspended" }],
   ]),
-  courses: new Map([["COA", { id: "c1" }]]),
+  courses: new Map([
+    ["COA", { id: "c1" }],
+    ["GD", { id: "c2" }],
+  ]),
   sessions: new Map([["january–june 2026", { id: "ss1" }]]),
+  assignments: new Set(["i1:c1", "i2:c1"]),
   usedRolls: new Set(["200001"]),
   usedRegistrations: new Set(["2600000001"]),
   tenantInstituteId: tenant,
@@ -44,6 +48,10 @@ describe("validateStudentRows", () => {
   it("enforces tenant isolation for institute users", () => {
     expect(msgs([row({ institute_code: "INS-B" })], "i1")).toContain("2:institute_code:You can only import students of your own institute");
     expect(msgs([row()], "i1")).toEqual([]);
+  });
+
+  it("rejects courses not assigned to the institute", () => {
+    expect(msgs([row({ course_code: "GD" })])).toContain("2:course_code:Course GD is not assigned to institute INS-A");
   });
 
   it("rejects identifiers already used in the database or duplicated in the file", () => {

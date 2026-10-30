@@ -185,16 +185,42 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"institutes": {
+                },"institute_courses": {
                   Row: {
-                    "address": string | null,"approved_at": string | null,"approved_by": string | null,"code": string,"created_at": string,"district": string | null,"email": string | null,"established_year": number | null,"head_name": string | null,"id": string,"name_bn": string | null,"name_en": string,"phone": string | null,"remarks": string | null,"status": Database["public"]['Enums']["institute_status"],"updated_at": string
+                    "assigned_at": string,"assigned_by": string | null,"course_id": string,"institute_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"approved_at"?: string | null,"approved_by"?: string | null,"code": string,"created_at"?: string,"district"?: string | null,"email"?: string | null,"established_year"?: number | null,"head_name"?: string | null,"id"?: string,"name_bn"?: string | null,"name_en": string,"phone"?: string | null,"remarks"?: string | null,"status"?: Database["public"]['Enums']["institute_status"],"updated_at"?: string
+                    "assigned_at"?: string,"assigned_by"?: string | null,"course_id": string,"institute_id": string
                   }
                   Update: {
-                    "address"?: string | null,"approved_at"?: string | null,"approved_by"?: string | null,"code"?: string,"created_at"?: string,"district"?: string | null,"email"?: string | null,"established_year"?: number | null,"head_name"?: string | null,"id"?: string,"name_bn"?: string | null,"name_en"?: string,"phone"?: string | null,"remarks"?: string | null,"status"?: Database["public"]['Enums']["institute_status"],"updated_at"?: string
+                    "assigned_at"?: string,"assigned_by"?: string | null,"course_id"?: string,"institute_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "institute_courses_course_id_fkey"
+      columns: ["course_id"]
+isOneToOne: false
+      referencedRelation: "courses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "institute_courses_institute_id_fkey"
+      columns: ["institute_id"]
+isOneToOne: false
+      referencedRelation: "institutes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"institutes": {
+                  Row: {
+                    "address": string | null,"applicant_email": string | null,"applicant_name": string | null,"applicant_phone": string | null,"application_note": string | null,"applied_at": string | null,"approved_at": string | null,"approved_by": string | null,"code": string,"created_at": string,"district": string | null,"documents": (string)[],"email": string | null,"established_year": number | null,"head_name": string | null,"id": string,"name_bn": string | null,"name_en": string,"phone": string | null,"remarks": string | null,"requested_courses": (string)[],"status": Database["public"]['Enums']["institute_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"applicant_email"?: string | null,"applicant_name"?: string | null,"applicant_phone"?: string | null,"application_note"?: string | null,"applied_at"?: string | null,"approved_at"?: string | null,"approved_by"?: string | null,"code": string,"created_at"?: string,"district"?: string | null,"documents"?: (string)[],"email"?: string | null,"established_year"?: number | null,"head_name"?: string | null,"id"?: string,"name_bn"?: string | null,"name_en": string,"phone"?: string | null,"remarks"?: string | null,"requested_courses"?: (string)[],"status"?: Database["public"]['Enums']["institute_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "address"?: string | null,"applicant_email"?: string | null,"applicant_name"?: string | null,"applicant_phone"?: string | null,"application_note"?: string | null,"applied_at"?: string | null,"approved_at"?: string | null,"approved_by"?: string | null,"code"?: string,"created_at"?: string,"district"?: string | null,"documents"?: (string)[],"email"?: string | null,"established_year"?: number | null,"head_name"?: string | null,"id"?: string,"name_bn"?: string | null,"name_en"?: string,"phone"?: string | null,"remarks"?: string | null,"requested_courses"?: (string)[],"status"?: Database["public"]['Enums']["institute_status"],"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -406,6 +432,9 @@ isOneToOne: false
 "is_cms_editor":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"is_safe_url":
+{ Args: { "u": string }; Returns: boolean
+                           },
 "log_event":
 { Args: { "p_action": string,"p_data"?: Json,"p_reason"?: string,"p_record_id": string,"p_table": string }; Returns: undefined
                            },
@@ -437,6 +466,9 @@ isOneToOne: false
                            },
 "set_results_publication":
 { Args: { "p_ids": (string)[],"p_publish": boolean }; Returns: Json
+                           },
+"submit_results":
+{ Args: { "p_exam_id": string }; Returns: Json
                            }
           }
           Enums: {

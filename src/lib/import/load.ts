@@ -66,6 +66,8 @@ export async function loadStudentLookup(
   tenantInstituteId: string | null,
 ): Promise<StudentLookup> {
   const ref = await referenceData(supabase);
+  const { data: assigned, error: aErr } = await supabase.from("institute_courses").select("institute_id, course_id");
+  if (aErr) throw new Error(aErr.message);
   const rolls = [...new Set(rows.map((r) => normId(r.roll_no)).filter(Boolean))];
   const regs = [...new Set(rows.map((r) => normId(r.registration_no)).filter(Boolean))];
   const usedRolls = new Set<string>();
@@ -83,6 +85,7 @@ export async function loadStudentLookup(
     institutes: ref.institutes,
     courses: ref.courses,
     sessions: ref.sessions,
+    assignments: new Set(assigned.map((a) => `${a.institute_id}:${a.course_id}`)),
     usedRolls,
     usedRegistrations,
     tenantInstituteId,

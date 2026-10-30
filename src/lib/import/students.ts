@@ -24,6 +24,8 @@ export type StudentLookup = {
   courses: Map<string, { id: string }>;
   /** lower-cased session name → id */
   sessions: Map<string, { id: string }>;
+  /** `${institute_id}:${course_id}` pairs the institute may enrol in */
+  assignments: Set<string>;
   usedRolls: Set<string>;
   usedRegistrations: Set<string>;
   /** Tenant users may only import into their own institute. */
@@ -85,6 +87,10 @@ export function validateStudentRows(rows: Record<string, string>[], lookup: Stud
     const course = lookup.courses.get(courseCode);
     if (!courseCode) err("course_code", "Course code is required");
     else if (!course) err("course_code", "Unknown course code", courseCode);
+
+    if (institute && course && !lookup.assignments.has(`${institute.id}:${course.id}`)) {
+      err("course_code", `Course ${courseCode} is not assigned to institute ${instCode}`, courseCode);
+    }
 
     const session = lookup.sessions.get(sessionName.toLowerCase());
     if (!sessionName) err("session", "Session is required");

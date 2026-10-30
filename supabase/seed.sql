@@ -36,6 +36,18 @@ insert into public.exams (id, code, name, course_id, session_id, exam_date, theo
 ('44444444-0000-4000-8000-000000000003', 'COA-2026-DEC', 'Computer Office Application — Final (Dec 2026)', '22222222-0000-4000-8000-000000000001', '33333333-0000-4000-8000-000000000002', '2026-12-15', 60, 40, 40),
 ('44444444-0000-4000-8000-000000000004', 'WEB-2026-DEC', 'Web Design — Final (Dec 2026)', '22222222-0000-4000-8000-000000000004', '33333333-0000-4000-8000-000000000002', '2026-12-18', 50, 50, 40);
 
+-- Courses each institute may enrol students in (course codes by institute)
+insert into public.institute_courses (institute_id, course_id)
+select i.id, c.id
+from public.institutes i
+join public.courses c on c.code = any (
+  case i.code
+    when 'DHK-001' then array['COA', 'GD', 'WEB', 'ELW']
+    when 'CTG-001' then array['COA', 'GD', 'WEB', 'DM']
+    when 'RAJ-001' then array['COA', 'GD', 'WEB', 'RAC']
+    else array['COA']
+  end);
+
 -- 60 synthetic students. Roll 200001.. and registration 2600000001.. are fixed
 -- so tests can reference them. Courses rotate COA, GD, WEB; institutes rotate
 -- across the three approved institutes.

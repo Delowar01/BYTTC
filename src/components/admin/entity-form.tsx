@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ type Props = {
 
 export function EntityForm({ action, fields, submitLabel = "Save", cancelHref, hidden }: Props) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
+  const formId = useId(); // unique ids when several forms share a page
   const hasFile = fields.some((f) => f.type === "image" || f.type === "file");
 
   const valueOf = (f: FieldDef) => {
@@ -62,7 +63,7 @@ export function EntityForm({ action, fields, submitLabel = "Save", cancelHref, h
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
         {fields.map((f, index) => {
           const error = state.errors?.[f.name];
-          const id = `f-${f.name}`;
+          const id = `${formId}-${f.name}`;
           const heading = headings[index] ? (
             <h3 key={`s-${f.section}`} className="border-b pb-1 text-sm font-semibold tracking-wide text-muted-foreground uppercase md:col-span-2">
               {f.section}

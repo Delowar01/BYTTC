@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BadgeCheck, MapPin, Phone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,10 +21,15 @@ export default async function InstitutesPage({ searchParams }: PageProps<"/insti
     <>
       <PageHero title={pick(locale, page?.title_en, page?.title_bn)} intro={pick(locale, page?.body_en, page?.body_bn)} />
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <form className="mb-6 flex max-w-xl gap-2" role="search">
-          <Input name="q" defaultValue={search} placeholder={t.institutesSearch} aria-label={t.institutesSearch} />
-          <Button type="submit">{t.search}</Button>
-        </form>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <form className="flex w-full max-w-xl gap-2" role="search">
+            <Input name="q" defaultValue={search} placeholder={t.institutesSearch} aria-label={t.institutesSearch} />
+            <Button type="submit">{t.search}</Button>
+          </form>
+          <Button variant="outline" asChild>
+            <Link href="/apply">{t.applyCta}</Link>
+          </Button>
+        </div>
         {!institutes?.length && <p className="text-muted-foreground">{t.noInstitutes}</p>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {institutes?.map((i) => (

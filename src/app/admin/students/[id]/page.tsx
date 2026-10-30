@@ -24,14 +24,18 @@ export default async function StudentFormPage({ params, searchParams }: PageProp
     if (!data) notFound();
     row = data;
   }
-  const [{ data: institutes }, { data: courses }, { data: sessions }, results] = await Promise.all([
+  const [{ data: institutes }, { data: allCourses }, { data: sessions }, results, { data: assigned }] = await Promise.all([
     supabase.from("institutes").select("id, code, name_en, status").order("code"),
     supabase.from("courses").select("id, code, title_en").order("code"),
     supabase.from("academic_sessions").select("id, name").order("start_date", { ascending: false }),
     isNew
       ? Promise.resolve({ data: [] })
       : supabase.from("results").select("id, total_marks, grade, status, exams(code, name)").eq("student_id", id),
+    central ? Promise.resolve({ data: null }) : supabase.from("institute_courses").select("course_id"),
   ]);
+  // Institute users may only enrol in courses assigned to their institute.
+  const allowed = assigned ? new Set(assigned.map((a) => a.course_id)) : null;
+  const courses = (allCourses ?? []).filter((c) => !allowed || allowed.has(c.id) || c.id === row?.course_id);
 
   const fields: FieldDef[] = [
     { name: "institute_id", label: "Institute", type: "select", required: true, defaultValue: row?.institute_id ?? (central ? "" : profile.institute_id), options: (institutes ?? []).filter((i) => i.status === "approved" || i.id === row?.institute_id).map((i) => ({ value: i.id, label: `${i.code} — ${i.name_en}` })), section: "Enrolment" },

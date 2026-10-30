@@ -69,15 +69,31 @@ policies, triggers and RPC checks).
 
 | Capability | Super Admin | Central Admin | Central Staff | Institute Admin | Institute Staff |
 | --- | :-: | :-: | :-: | :-: | :-: |
-| Students (CRUD, import, export) | all | all | all | own institute | own institute (no delete) |
+| Students (CRUD, import, export) | all | all | all | own institute, assigned courses | own institute (no delete) |
 | Institutes, courses, sessions, exams | ✓ | ✓ | ✓ (no delete) | – | – |
 | Approve / suspend institutes | ✓ | ✓ | – | – | – |
-| Upload results | ✓ | ✓ | ✓ | own institute (submitted) | own institute (submitted) |
+| Upload results / marks entry | ✓ | ✓ | ✓ | own institute → submit for review | own institute → submit for review |
 | Publish / unpublish / correct published results | ✓ | ✓ | – | – | – |
+| Course assignments per institute | ✓ | ✓ | – | read | read |
 | CMS, grading rules, audit log | ✓ | ✓ | – | – | – |
-| User accounts | ✓ | – | – | – | – |
+| User accounts | all | institute accounts | – | own staff | – |
 
 A suspended institute's users lose all data access immediately.
+
+## Institute onboarding
+
+1. An institute applies online at `/apply` (bilingual form, rate limited).
+   Supporting documents go to the private bucket; the application is stored
+   as a **pending** institute and never shown publicly.
+2. Central staff review it under **Institutes** (documents open through
+   60-second signed links, every view is logged), set the permanent institute
+   code, assign courses and **approve** (or reject with a reason).
+3. Activation: on the approved institute's page, a Central/Super Admin creates
+   the **institute admin** account with a temporary password. The institute
+   admin changes it under **My account** and can add **staff** accounts.
+4. Institute users register students (only in assigned courses), enter marks
+   (**Marks entry**) or upload files, and **submit** drafts for review. Only
+   central publishers can publish.
 
 ## Bulk result upload
 

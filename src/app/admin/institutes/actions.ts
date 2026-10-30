@@ -78,3 +78,25 @@ export async function deleteInstitute(id: string, _prev: FormState): Promise<For
     redirect("/admin/institutes");
   });
 }
+
+/** Replace the set of courses an institute may enrol students in. */
+export async function saveCourseAssignments(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return withRole(PUBLISHERS, async ({ supabase }) => {
+    const wanted = new Set(formData.getAll("courses").map(String));
+    const { data: current, error } = await supabase.from("institute_courses").select("course_id").eq("institute_id", id);
+    if (error) return fail(dbMessage(error));
+    const have = new Set(current.map((c) => c.course_id));
+    const add = [...wanted].filter((c) => !have.has(c)).map((course_id) => ({ institute_id: id, course_id }));
+    const remove = [...have].filter((c) => !wanted.has(c));
+    if (add.length) {
+      const { error: e } = await supabase.from("institute_courses").insert(add);
+      if (e) return fail(dbMessage(e));
+    }
+    if (remove.length) {
+      const { error: e } = await supabase.from("institute_courses").delete().eq("institute_id", id).in("course_id", remove);
+      if (e) return fail(dbMessage(e));
+    }
+    revalidatePath(`/admin/institutes/${id}`);
+    return success(`Course assignments saved (${wanted.size} course${wanted.size === 1 ? "" : "s"}).`);
+  });
+}

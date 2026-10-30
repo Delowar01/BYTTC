@@ -1,5 +1,5 @@
 import type { AppRole } from "@/lib/roles";
-import { ALL_STAFF, CENTRAL, CMS_EDITORS, PUBLISHERS, SUPER } from "@/lib/roles";
+import { ALL_STAFF, CENTRAL, CMS_EDITORS, PUBLISHERS, USER_MANAGERS } from "@/lib/roles";
 
 export type NavItem = { href: string; label: string; icon: string; group: string; roles: AppRole[] };
 
@@ -11,6 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/sessions", label: "Sessions", icon: "CalendarRange", group: "Academic", roles: CENTRAL },
   { href: "/admin/exams", label: "Exams", icon: "ClipboardList", group: "Academic", roles: CENTRAL },
   { href: "/admin/results", label: "Results", icon: "GraduationCap", group: "Results", roles: ALL_STAFF },
+  { href: "/admin/results/entry", label: "Marks entry", icon: "PenLine", group: "Results", roles: ALL_STAFF },
   { href: "/admin/results/import", label: "Bulk result upload", icon: "Upload", group: "Results", roles: ALL_STAFF },
   { href: "/admin/imports", label: "Import history", icon: "History", group: "Results", roles: ALL_STAFF },
   { href: "/admin/grading", label: "Grading rules", icon: "Sigma", group: "Results", roles: PUBLISHERS },
@@ -22,5 +23,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/cms/media", label: "Media library", icon: "Images", group: "Website (CMS)", roles: CMS_EDITORS },
   { href: "/admin/messages", label: "Contact messages", icon: "Inbox", group: "Website (CMS)", roles: CENTRAL },
   { href: "/admin/audit", label: "Audit log", icon: "ScrollText", group: "System", roles: PUBLISHERS },
-  { href: "/admin/users", label: "Users", icon: "UserCog", group: "System", roles: SUPER },
+  { href: "/admin/users", label: "Users", icon: "UserCog", group: "System", roles: USER_MANAGERS },
+  { href: "/admin/account", label: "My account", icon: "KeyRound", group: "System", roles: ALL_STAFF },
 ];

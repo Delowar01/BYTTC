@@ -42,6 +42,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         .limit(6),
     ]);
 
+  const { data: offered } = central ? { data: null } : await supabase.from("institute_courses").select("courses(code, title_en)");
+
   const stats = [
     { label: "Approved institutes", value: institutesApproved, sub: `${institutesPending} pending approval`, icon: Building2, href: "/admin/institutes", show: central },
     { label: "Students", value: students, sub: "registered", icon: Users, href: "/admin/students", show: true },
@@ -85,6 +87,27 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
           </Link>
         ))}
       </div>
+      {offered && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{profile.institutes?.name_en}</CardTitle>
+            <CardDescription>
+              Courses your institute may enrol students in. {draft > 0 && `${draft} draft result(s) are waiting to be submitted for central review.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {offered.length === 0 && <span className="text-sm text-muted-foreground">No courses assigned yet. Contact the central office.</span>}
+            {offered.map((o) => (
+              <span key={o.courses?.code} className="rounded-md border px-2 py-1 text-sm">
+                {o.courses?.code} — {o.courses?.title_en}
+              </span>
+            ))}
+            <Button variant="outline" size="sm" asChild className="ml-auto">
+              <Link href="/admin/results/entry">Marks entry</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Recent uploads</CardTitle>
