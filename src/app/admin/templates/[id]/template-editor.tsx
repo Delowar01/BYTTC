@@ -215,7 +215,7 @@ export function TemplateEditor(props: Props) {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         {!readOnly && (
           <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Add fields">
             {addButtons.map(([label, icon, make]) => (
@@ -283,7 +283,7 @@ export function TemplateEditor(props: Props) {
         </div>
       </div>
 
-      <aside className="space-y-4">
+      <aside className="min-w-0 space-y-4">
         {readOnly ? (
           <p className="rounded-md border bg-muted/50 p-3 text-sm">
             This version is <strong>{status}</strong> and cannot be changed. Use <em>Duplicate</em> on the templates page to create an editable draft.

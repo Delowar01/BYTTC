@@ -109,6 +109,18 @@ test("bulk result upload: validate → commit as draft → publish → public �
   await expect(card.getByTestId("result-grade")).toContainText("A+");
   await expect(card.getByTestId("result-verdict")).toHaveText("Passed");
 
+  // Correct an imported, published record (reason required) → public result updates
+  await page.goto(`/admin/results?q=${STUDENTS[3][0]}`);
+  await page.getByRole("row", { name: new RegExp(code) }).getByRole("link", { name: STUDENTS[3][0], exact: true }).click();
+  await page.getByLabel(/^Written\/theory marks/).fill("40");
+  await page.getByLabel(/^Reason for correction/).fill("E2E imported mark corrected");
+  await page.getByRole("button", { name: "Save correction" }).click();
+  await expect(page.getByText("Result updated. Totals and grade recalculated.")).toBeVisible();
+  await publicLookup(page, STUDENTS[3][0], STUDENTS[3][1]); // 40 + 35 = 75 → A
+  const corrected = page.getByTestId("result-card").filter({ hasText: examName }).getByTestId("result-grade");
+  await expect(corrected).toContainText(/^A\b/);
+  await expect(corrected).not.toContainText("A+");
+
   // 4) Unpublish → hidden; rollback (with reason) → removed
   await page.goto(batchUrl);
   await page.getByRole("button", { name: "Unpublish results" }).click();

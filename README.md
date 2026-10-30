@@ -59,8 +59,11 @@ npm run lint && npm run typecheck
   publication guard, no auto-publish, correction reasons, audit trail,
   atomic batch commit, full batch lifecycle.
 - `tests/e2e` — browser flows: login, CRUD, institute approval, CMS edits,
-  bulk result upload (errors → commit → publish → public search → unpublish →
-  rollback), student import, bilingual public site, rate limiting, mobile layout.
+  bulk result upload (errors → commit → publish → correction → public search →
+  unpublish → rollback), student import, single results and corrections,
+  passport searches, marksheets, template design upload and field placement,
+  admit/registration cards, certificate templates, QR verification, bilingual
+  public site, rate limiting, mobile layout.
 
 ## Roles and permissions
 
@@ -132,6 +135,38 @@ A suspended institute's users lose all data access immediately.
   new number linked to it (verification of the old number points to the new
   one); *Revoke* requires a reason. Results with a valid certificate cannot be
   unpublished until the certificate is revoked.
+
+## Academic documents
+
+Admin → *Academic documents*: Certificates, Marksheets, Admit cards,
+Registration cards and Document templates.
+
+- **Templates** — one active template per document type, versioned
+  (draft → active → archived; *Duplicate* creates the next draft version,
+  re-activating an archived version rolls back). Only drafts can be edited
+  (enforced in the database). Upload a **blank** design as PNG, JPG or PDF
+  (images are re-encoded without metadata; only the first PDF page is kept),
+  then place fields in the visual editor: drag to move, corner handle to
+  resize, arrow keys to nudge. Fields: text with `{tokens}` (English and
+  Bangla), student photo, logo, QR code, line, box, marks table and uploaded
+  signature/stamp images. *Preview* renders fictional sample data stamped
+  SAMPLE. Positions are page percentages, so any design resolution works.
+- **Snapshots** — admit cards, registration cards and templated certificates
+  store the layout, design and data they were issued with; later template or
+  record changes never alter them. Corrections are made by *Reissue*: the old
+  document verifies as *superseded* and points to the new number.
+- **Marksheets** are generated on demand from published results with the
+  active marksheet template (public download and staff single/bulk PDFs).
+- **Admit cards** — per exam (time and venue come from the exam), with seat
+  number and examinee type; **registration cards** — one valid card per
+  student, validity from Site settings or per card.
+- **Verification** — every document carries a QR code: `/verify?no=` checks
+  certificates, admit cards and registration cards (valid, revoked,
+  superseded, expired); result sheets use `/verify?r=` (valid, superseded,
+  withdrawn).
+- Bulk PDFs come in parts of 50 to stay within hosting response limits.
+- Certificates issued before a certificate template is activated keep the
+  original built-in design.
 
 ## Reports, exports and printing
 

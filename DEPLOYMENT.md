@@ -23,7 +23,7 @@ On your own machine, from a checkout of this branch:
 ```bash
 supabase login
 supabase link --project-ref <staging-project-ref>
-supabase db push --dry-run          # lists the 8 migrations
+supabase db push --dry-run          # lists the 11 migrations
 supabase db push --include-seed     # staging only: schema + synthetic demo data
 ```
 
@@ -39,8 +39,8 @@ In the Supabase dashboard of the **staging** project:
 3. **Authentication → Emails → SMTP Settings**: enter your SMTP provider.
 4. **Authentication → Emails → Templates → Reset Password**: subject
    “Reset your password”, body = contents of `supabase/templates/recovery.html`.
-5. Storage buckets (`public-media`, `private-documents`) are created by the
-   migrations — nothing to do.
+5. Storage buckets (`public-media`, `private-documents`, `document-templates`)
+   are created by the migrations — nothing to do.
 
 ## 2. Vercel (Preview deployment)
 
@@ -84,6 +84,48 @@ Vercel and no password is written to a file.
 Alternative from a trusted terminal (values typed into the shell, not saved):
 `NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… SEED_SUPER_ADMIN_EMAIL=… SEED_SUPER_ADMIN_PASSWORD=… npm run seed:users`.
 `--test-users` refuses to run against non-local projects.
+
+## Upgrading an existing staging database (academic documents release)
+
+For a staging project that already has the first 8 migrations. All three new
+migrations are additive: new columns (with defaults/backfills), new tables,
+a private `document-templates` bucket and replaced functions. No existing
+results, certificates or students are deleted, and published results keep
+their marks, grades and publication time (`first_published_at` is copied
+from `published_at`).
+
+1. **Approval first** — this changes the hosted staging database; run it only
+   after you approve the upgrade.
+2. **Backup** — run `scripts/backup.sh` from your own terminal (it needs the
+   database connection string, project URL and service-role key typed into
+   the shell; see README → Backups and recovery). It saves the database and
+   every storage bucket. Note the latest dashboard backup/PITR point too.
+3. **Dry run** from a checkout of `claude/academic-documents-upgrade`:
+
+   ```bash
+   supabase link --project-ref <staging-project-ref>
+   supabase db push --dry-run
+   ```
+
+   It must list exactly `20261031000100_academic_records.sql`,
+   `20261031000200_public_results.sql` and `20261031000300_documents.sql`.
+   Anything else → stop.
+4. **Apply** — `supabase db push` (never `--include-seed` on a database
+   with real data; never `db reset`).
+5. **Verify (read-only)** — paste `scripts/verify-upgrade.sql` into the SQL
+   Editor; every value must match the *expected* column.
+6. **Deploy the app** — point the Vercel Preview at
+   `claude/academic-documents-upgrade` (same environment variables). The old
+   app keeps working against the upgraded schema until then, except that
+   result corrections need the new screens.
+7. **Recovery** — if anything is wrong, use the dashboard's backup/PITR
+   restore, or `scripts/restore.sh` into a new, empty project and point the
+   app at it; do not hand-edit migrations that were applied.
+
+After the upgrade: Admin → Document templates shows active built-in
+templates for marksheets, admit cards and registration cards; certificates
+keep the original design until a certificate template is activated. Upload
+only blank designs and signatures you are authorized to use.
 
 ## 4. Acceptance on staging
 
