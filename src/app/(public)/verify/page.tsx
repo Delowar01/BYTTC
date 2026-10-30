@@ -18,8 +18,23 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
   const locale = await getLocale();
   const t = getDictionary(locale);
   const [page, settings] = await Promise.all([getPage("verify"), getSettings()]);
-  const raw = (await searchParams).no;
+  const sp = await searchParams;
+  const raw = sp.no;
   const no = typeof raw === "string" ? raw.trim().toUpperCase().slice(0, 40) : "";
+  // Result-sheet QR codes: ?r=<opaque code>&v=<version printed on the sheet>
+  const resultCode = typeof sp.r === "string" ? sp.r.trim().toUpperCase().slice(0, 20) : "";
+  const printedVersion = typeof sp.v === "string" && /^\d{1,6}$/.test(sp.v) ? Number(sp.v) : null;
+  let resultOutcome: "none" | "limited" | "not_found" | "found" = "none";
+  let res = null;
+  if (resultCode) {
+    if (!/^[0-9A-Z]{8,20}$/.test(resultCode)) resultOutcome = "not_found";
+    else if (!(await allowRequest("certificate_verify", 60, "10 minutes"))) resultOutcome = "limited";
+    else {
+      const { data } = await createAdminClient().rpc("public_verify_result", { p_code: resultCode, p_version: printedVersion as number });
+      res = data?.[0] ?? null;
+      resultOutcome = res ? "found" : "not_found";
+    }
+  }
 
   let outcome: "none" | "limited" | "not_found" | "found" = "none";
   let cert = null;
@@ -45,6 +60,46 @@ export default async function VerifyPage({ searchParams }: PageProps<"/verify">)
             </form>
           </CardContent>
         </Card>
+        {resultOutcome === "limited" && (
+          <Alert variant="warning">
+            <AlertDescription className="text-inherit">{t.tooManyAttempts}</AlertDescription>
+          </Alert>
+        )}
+        {resultOutcome === "not_found" && (
+          <Alert variant="destructive" data-testid="result-verify-not-found">
+            <ShieldX />
+            <AlertTitle>{t.resultNotFound}</AlertTitle>
+          </Alert>
+        )}
+        {resultOutcome === "found" && res && (
+          <Card className={res.status === "valid" ? "border-emerald-400" : "border-amber-400"} data-testid="result-verify-card">
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                {res.status === "valid" ? <BadgeCheck className="size-10 text-emerald-600" /> : <ShieldX className="size-10 text-amber-600" />}
+                <p className="text-lg font-semibold" data-testid="result-verify-status">
+                  {res.status === "valid" ? t.resultValid : res.status === "superseded" ? t.resultSuperseded : t.resultWithdrawn}
+                </p>
+              </div>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                {[
+                  [t.studentName, res.student_name],
+                  [t.rollNo, res.roll_no],
+                  [t.registrationNo, res.registration_no],
+                  [t.institute, res.institute_name],
+                  [t.course, res.course_title],
+                  [t.exam, res.exam_name],
+                  ...(res.grade ? [[t.grade, `${res.grade} (${Number(res.grade_point).toFixed(2)}) · ${Number(res.total_marks)}/${Number(res.full_marks)}`]] : []),
+                  ...(res.display_published_on ? [[t.publishedOn, formatDate(res.display_published_on, locale)]] : []),
+                ].map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4 border-b border-dashed py-1">
+                    <dt className="text-muted-foreground">{k}</dt>
+                    <dd className="text-right font-medium">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </CardContent>
+          </Card>
+        )}
         {outcome === "limited" && (
           <Alert variant="warning">
             <AlertDescription className="text-inherit">{t.tooManyAttempts}</AlertDescription>

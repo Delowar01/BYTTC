@@ -26,8 +26,10 @@ function loadFonts() {
 
 export const hasBangla = (text: string) => /[ঀ-৿]/.test(text);
 
-/** Draw text horizontally centred on the page with its baseline at `y`. */
-export async function drawShapedCentered(page: PDFPage, text: string, y: number, size: number, color: Color, weight: "regular" | "bold" = "regular") {
+type Shaped = { width: number; draw: (page: PDFPage, x: number, y: number, color: Color) => void };
+
+/** Shape Bangla text once; measure it, then draw it at any position (baseline y). */
+export async function shapeBangla(text: string, size: number, weight: "regular" | "bold" = "regular"): Promise<Shaped> {
   const { face, font } = (await loadFonts())[weight];
   const buffer = new hb.Buffer();
   buffer.addText(text);
@@ -36,12 +38,24 @@ export async function drawShapedCentered(page: PDFPage, text: string, y: number,
   const scale = size / face.upem;
   const infos = buffer.getGlyphInfos();
   const positions = buffer.getGlyphPositions();
-  let pen = (page.getWidth() - positions.reduce((w, p) => w + p.xAdvance, 0) * scale) / 2;
-  infos.forEach((glyph, i) => {
-    const p = positions[i];
-    // Font outlines are y-up; pdf-lib's SVG paths are y-down.
-    const outline = font.glyphToPath(glyph.codepoint).replace(/(-?[\d.]+),(-?[\d.]+)/g, (_, x, gy) => `${x},${-Number(gy)}`);
-    if (outline) page.drawSvgPath(outline, { x: pen + p.xOffset * scale, y: y + p.yOffset * scale, scale, color, borderWidth: 0 });
-    pen += p.xAdvance * scale;
-  });
+  const width = positions.reduce((w, p) => w + p.xAdvance, 0) * scale;
+  // Font outlines are y-up; pdf-lib's SVG paths are y-down.
+  const outlines = infos.map((g) => font.glyphToPath(g.codepoint).replace(/(-?[\d.]+),(-?[\d.]+)/g, (_, x, gy) => `${x},${-Number(gy)}`));
+  return {
+    width,
+    draw(page, x, y, color) {
+      let pen = x;
+      outlines.forEach((outline, i) => {
+        const p = positions[i];
+        if (outline) page.drawSvgPath(outline, { x: pen + p.xOffset * scale, y: y + p.yOffset * scale, scale, color, borderWidth: 0 });
+        pen += p.xAdvance * scale;
+      });
+    },
+  };
+}
+
+/** Draw text horizontally centred on the page with its baseline at `y`. */
+export async function drawShapedCentered(page: PDFPage, text: string, y: number, size: number, color: Color, weight: "regular" | "bold" = "regular") {
+  const shaped = await shapeBangla(text, size, weight);
+  shaped.draw(page, (page.getWidth() - shaped.width) / 2, y, color);
 }

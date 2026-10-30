@@ -48,6 +48,8 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
     supabase.from("exams").select("id, code").order("code"),
     supabase.from("institutes").select("id, code").order("code"),
   ]);
+  const { count: publishedCount } = f.exam ? await supabase.from("results").select("*", { count: "exact", head: true }).eq("exam_id", f.exam).eq("status", "published") : { count: 0 };
+  const parts = Math.ceil((publishedCount ?? 0) / 50);
   const backQs = new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][]).toString();
 
   return (
@@ -58,6 +60,14 @@ export default async function ResultsPage({ searchParams }: PageProps<"/admin/re
             <Download /> Excel
           </a>
         </Button>
+        {f.exam &&
+          Array.from({ length: parts }, (_, i) => (
+            <Button key={i} variant="outline" asChild>
+              <a href={`/admin/results/marksheets?exam=${f.exam}&part=${i + 1}`}>
+                <Download /> Marksheets{parts > 1 ? ` ${i * 50 + 1}–${Math.min((i + 1) * 50, publishedCount ?? 0)}` : ""}
+              </a>
+            </Button>
+          ))}
         {f.exam && (
           <Button variant="outline" asChild>
             <Link href={`/admin/results/print?exam=${f.exam}`}>

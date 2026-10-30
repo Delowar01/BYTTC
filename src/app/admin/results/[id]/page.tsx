@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,6 +54,11 @@ export default async function ResultPage({ params, searchParams }: PageProps<"/a
   return (
     <div className="max-w-4xl space-y-6">
       <PageHeader title={`${r.students?.name_en} — ${r.exams?.code}`} description={`Roll ${r.students?.roll_no} · Registration ${r.students?.registration_no} · ${r.institutes?.name_en}`}>
+        <Button variant="outline" asChild>
+          <a href={`/admin/results/${id}/marksheet`} target="_blank" rel="noopener">
+            <FileDown /> Download marksheet
+          </a>
+        </Button>
         {canPublish && (r.status === "draft" || r.status === "submitted" || r.status === "unpublished") && (
           <ActionButton action={setResultPublication.bind(null, id, true)} label="Publish result" variant="default" size="default" confirm="Publish this result? It becomes visible in public result search." />
         )}

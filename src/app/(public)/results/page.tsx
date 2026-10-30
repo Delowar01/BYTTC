@@ -15,7 +15,12 @@ export default async function ResultsPage() {
         <PageHero title={pick(locale, page?.title_en, page?.title_bn)} intro={pick(locale, page?.body_en, page?.body_bn)} />
       </div>
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <ResultSearch t={t} locale={locale} issuer={pick(locale, settings.org_name_en, settings.org_name_bn)} disclaimer={t.resultDisclaimer} />
+        <ResultSearch
+          t={t}
+          locale={locale}
+          org={{ name: pick(locale, settings.org_name_en, settings.org_name_bn), nameBn: settings.org_name_bn, registrationNo: settings.org_registration_no, logoUrl: settings.logo_url }}
+          disclaimer={t.resultDisclaimer}
+        />
       </div>
     </>
   );

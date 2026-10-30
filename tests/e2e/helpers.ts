@@ -19,11 +19,16 @@ export function autoAcceptDialogs(page: Page, reason = "E2E test reason") {
 
 export const uid = () => Date.now().toString(36).toUpperCase().slice(-6);
 
-/** Local test DB only: clear the per-client rate limiter so each test starts fresh. */
-export async function resetRateLimit(kind: string) {
+/** Service-role client for test setup — refuses anything but a LOCAL Supabase. */
+export function localService() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   if (!/^http:\/\/(127\.0\.0\.1|localhost)/.test(url)) throw new Error("E2E tests must run against a local Supabase");
-  const db = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+  return createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+}
+
+/** Local test DB only: clear the per-client rate limiter so each test starts fresh. */
+export async function resetRateLimit(kind: string) {
+  const db = localService();
   const { error } = await db.from("lookup_attempts").delete().eq("kind", kind);
   if (error) throw error;
 }

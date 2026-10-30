@@ -27,5 +27,5 @@ export function buildCsp(nonce: string) {
 
 /** Route handlers that return files (PDF, Excel, CSV, redirects to signed URLs) — not HTML. */
 export function isFileRoute(pathname: string) {
-  return /\/(pdf|export|template|file|document|errors)$/.test(pathname) || pathname === "/lang";
+  return /\/(pdf|export|template|file|document|errors|marksheet|marksheets|sheet|preview)$/.test(pathname) || pathname === "/lang";
 }
